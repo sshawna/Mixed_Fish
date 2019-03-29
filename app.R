@@ -4,11 +4,12 @@ library(shinythemes)
 ui <- fluidPage(
   theme = shinytheme("superhero"),
   titlePanel("Mixed Fisheries"),
-  navlistPanel(id="mainpanel", widths=c(2,10), 
+  navlistPanel(id="mainpanel", widths=c(2,10),
+               tabPanel("Introduction"),
                tabPanel("Landings"),
                tabPanel("Effort"),
                tabPanel("Existing Tools"),
-               tabPanel("Schenarios")
+               tabPanel("Mixed Fisheries Schenarios")
                ),
   hr(),
   fluidRow(width =12,
