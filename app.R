@@ -254,7 +254,7 @@ server <- function(input, output, session) {
       
       plotlist2[[7]]
     }
-    else if(input$set1==a1[8]){
+    else if(input$set2==a1[8]){
       
       plotlist2[[8]]
     }
@@ -351,9 +351,9 @@ server <- function(input, output, session) {
       
       plotlist3[[8]]
     }
-    else if(input$set1==a[9]){
+    else if(input$set3==a[9]){
       plotlist1[[9]]
-    }else if(input$set1==a[10]){
+    }else if(input$set3==a[10]){
       
       plotlist3[[10]]}
     else if(input$set3==a[11]){
