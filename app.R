@@ -115,7 +115,7 @@ server <- function(input, output, session) {
       ggtitle("The proportion of the species landed by each unique level 5 métier") +
       facet_wrap(~ Metier_lvl5) +
       theme_grey(base_size = 16) + 
-      viridis::scale_fill_viridis(discrete = TRUE)+
+      viridis::scale_fill_viridis(discrete = TRUE) +
       theme(legend.position="bottom", 
             legend.text=element_text(size=10),
             strip.background = element_blank(),
@@ -287,8 +287,7 @@ server <- function(input, output, session) {
       geom_bar(stat = "identity")+ 
       #geom_bar_interactive(stat = "identity",aes(tooltip = Species))+
       ylab("Total KW Per Day") +
-      xlab("Year") + ggtitle(a[i])+ scale_x_continuous(breaks=test$Year)+
-      
+      xlab("Year") + ggtitle(a[i])+ scale_x_continuous(breaks=test$Year) +
       #geom_bar(stat = "identity") +
       #facet_wrap(~ FishActEUivl5) +
       theme_grey(base_size = 16) + 
