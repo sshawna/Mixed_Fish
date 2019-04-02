@@ -2,7 +2,7 @@ library(shiny)
 library(shinythemes)
 library(shinydashboard)
 library(shinydashboardPlus)
-library(shinyalert)
+library(shinyalert).
 
 ui <- fluidPage(
   theme = shinytheme("superhero"),
