@@ -21,16 +21,17 @@ testE<-aggregate(CelticCE$Kw.days,by=list(CelticCE$Year,CelticCE$FishActEUivl5,C
 names(testE)<-c("Year","Metier_lvl5","VesselLen","KWperDay")
 
 ui <- fluidPage(
-  theme = shinytheme("spacelab"), #superhero
+  theme = shinytheme("superhero"), #spacelab
   titlePanel("Mixed Fisheries"),
   navlistPanel(id="mainpanel", widths=c(2,10), 
                tabPanel(" Introduction", value = "mp", icon = icon("home")),
                tabPanel(" Hackathon Work", value = "hw", icon = icon("folder-open"),
                         h3("Visualising the implications of catch decreases for fleets in a mixed fishery context"),
                         plotOutput("plot"),
+                        absolutePanel(id="controls",top = 80, left = 700, width = 400, height = "auto", fixed=FALSE, draggable = TRUE,
                         sliderInput("whitingslider", "Choose % reduction in Whiting Catch:", min = -100, max =0, value = 0, 
                                                   step = NULL, sep = "", animate = FALSE, post  = " %")
-               ),
+               )),
                tabPanel(" Landings",value = "mi", icon = icon("fish"), 
                         tabsetPanel(id="Ltabselected", type="pills",
                                     tabPanel("Page1", value="page1",  
@@ -108,7 +109,6 @@ server <- function(input, output, session) {
     }
     
     data_fish$Whiting_indicator2<-factor(data_fish$Whiting_indicator2) 
-    
     data_fish$Whiting_changed <- data_fish$Whiting*(100+input$whitingslider)/100  
     for(i in 1:dim(data_fish)){
       data_fish$total[i] <- sum(data_fish$Cod[i], data_fish$Haddock[i], data_fish$Whiting_changed[i], na.rm=TRUE)
@@ -198,7 +198,7 @@ server <- function(input, output, session) {
       geom_text(data=base_data, aes(x = title, y = -1, label=Country), hjust=c(0.5,1,1,0.6,0.5,0,0,0.5), 
                 vjust=c(0.5,0.5,0,-1,0,0.5,1.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)
     
-  }, bg="transparent", height= 1000)
+  }, height= 670)
   ##################################### End of Hackathon ################################################ 
   observeEvent(input$about, {
     shinyalert(
