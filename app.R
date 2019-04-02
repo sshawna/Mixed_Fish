@@ -241,7 +241,13 @@ server <- function(input, output, session) {
       plotlist1[[6]]
     }else if(input$set2==a1[7]){
       plotlist2[[7]]
+<<<<<<< HEAD
     }else if(input$set1==a1[8]){
+=======
+    }
+    else if(input$set2==a1[8]){
+      
+>>>>>>> refs/remotes/origin/master
       plotlist2[[8]]
     }else if(input$set2==a1[9]){
       plotlist2[[9]]
@@ -318,11 +324,21 @@ server <- function(input, output, session) {
       plotlist3[[7]]
     }else if(input$set3==a[8]){
       plotlist3[[8]]
+<<<<<<< HEAD
     }else if(input$set1==a[9]){
       plotlist1[[9]]
     }else if(input$set1==a[10]){
       plotlist3[[10]]
     }else if(input$set3==a[11]){
+=======
+    }
+    else if(input$set3==a[9]){
+      plotlist1[[9]]
+    }else if(input$set3==a[10]){
+      
+      plotlist3[[10]]}
+    else if(input$set3==a[11]){
+>>>>>>> refs/remotes/origin/master
       plotlist3[[11]]
     }else if(input$set3==a[12]){
       plotlist3[[12]]
