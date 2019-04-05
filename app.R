@@ -11,7 +11,7 @@ library(tidyverse)
 library(viridis)
 options(scipen=999)
 
-data_fish <-  read.csv(file="Hackathon/Data.csv") 
+data_fish <-  read.csv(file="data/Hackathon/Data.csv") 
 CelticEcoSpecies<-read.csv("data/CelticEcoSpecies.csv")
 test<-aggregate(CelticEcoSpecies$OfficialLanW,by=list(CelticEcoSpecies$Year,CelticEcoSpecies$FishActEUivl5,CelticEcoSpecies$Species),FUN="sum")
 names(test)<-c("Year","Metier_lvl5","Species","OfficialLanW")
