@@ -24,7 +24,11 @@ ui <- fluidPage(
   theme = shinytheme("superhero"), #spacelab
   titlePanel("Mixed Fisheries"),
   navlistPanel(id="mainpanel", widths=c(2,10), 
-               tabPanel(" Introduction", value = "mp", icon = icon("home")),
+               tabPanel(" Introduction", value = "mp", icon = icon("home"),
+                        useShinyalert(),  
+                        tags$li(class = "dropdown",
+                                actionButton("about", "About"),
+                                style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),
                tabPanel(" Hackathon Work", value = "hw", icon = icon("folder-open"),
                         h3("Visualising the implications of catch decreases for fleets in a mixed fishery context"),
                         plotOutput("plot"),
@@ -75,10 +79,13 @@ ui <- fluidPage(
                                  %>% withSpinner(color="#0dc5c1")))
                ),
                tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
-                        useShinyalert(),  
-                        tags$li(class = "dropdown",
-                                actionButton("about", "About"),
-                                style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),
+                        tabsetPanel(id="Tpanelselected", type="pills",
+                                    tabPanel("Raw accessions App", value="page1"),
+                                    tabPanel("Effort App", value="page2"),
+                                    tabPanel("Catchability App", value="page3"),
+                                    tabPanel("Partial F App", value="page4"),
+                                    tabPanel("Quota share App", value="page5")
+                                    )),
                tabPanel(" Schenarios", value ="sc", icon = icon("line-chart"))
   ),
   hr(),
