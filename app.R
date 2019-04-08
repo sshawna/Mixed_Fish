@@ -1,6 +1,7 @@
 library(shiny)
 library(shinythemes)
 library(shinyalert)
+library(shinyBS)
 library(ggplot2)
 library(RColorBrewer)
 library(ggiraph)
@@ -9,6 +10,7 @@ library(plotly)
 library(shinycssloaders)
 library(tidyverse)
 library(viridis)
+library(DT)
 options(scipen=999)
 
 data_fish <-  read.csv(file="data/Hackathon/Data.csv") 
@@ -18,48 +20,68 @@ names(test)<-c("Year","Metier_lvl5","Species","OfficialLanW")
 
 CelticCE<-read.csv("data/CelticCE.csv")
 testE<-aggregate(CelticCE$Kw.days,by=list(CelticCE$Year,CelticCE$FishActEUivl5,CelticCE$VesselLen),FUN="sum")
-names(testE)<-c("Year","Metier_lvl5","VesselLen","KWperDay")
+names(testE)<-c("Year","Metier_lvl5","VesselLen","KW_Day")
 
 ui <- fluidPage(
-  theme = shinytheme("superhero"), #spacelab
-  titlePanel("Mixed Fisheries"),
-  navlistPanel(id="mainpanel", widths=c(2,10), 
+theme = shinytheme("superhero"), #spacelab
+titlePanel("Mixed Fisheries"),
+navlistPanel(id="mainpanel", widths=c(2,10), 
                tabPanel(" Introduction", value = "mp", icon = icon("home")),
                tabPanel(" Hackathon Work", value = "hw", icon = icon("folder-open"),
                         h3("Visualising the implications of catch decreases for fleets in a mixed fishery context"),
                         plotOutput("plot"),
                         absolutePanel(id="controls",top = 80, left = 700, width = 400, height = "auto", fixed=FALSE, draggable = TRUE,
                         sliderInput("whitingslider", "Choose % reduction in Whiting Catch:", min = -100, max =0, value = 0, 
-                                                  step = NULL, sep = "", animate = FALSE, post  = " %")
-               )),
+                                                  step = NULL, sep = "", animate = FALSE, post  = " %"))),
                tabPanel(" Landings",value = "mi", icon = icon("fish"), 
                         tabsetPanel(id="Ltabselected", type="pills",
-                                    tabPanel("Page1", value="page1",  
+                                    tabPanel("Page1", value="page1", 
                                              fluidRow(
-                                               column(width=12,offset=7,div(
-                                                 style="display: inline-block;vertical-align:top; width: 200px;",
-                                                 selectInput("set1", label = "Select Metier",
-                                                             c("None",levels(test$Metier_lvl5)),selectize = T))
-                                                 )),
-                                             fluidRow(
+                                               column(width=5,offset = 4 ,h4( "The Proportion of Landings:")),
+                                               actionButton("info1", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),hr(),
+                                            absolutePanel(id="set",top = 85, left = 450, width = 700, height = "auto", 
+                                                             fixed=FALSE, draggable = TRUE,
+                                                              selectInput("name", "Select Parameter:",
+                                                              choices = c("Metier by Species"=1,"Species by Metier"=2))), br(),br(),
+                                               
+                                               fluidRow(
                                                column(width = 7,ggiraph::ggiraphOutput("plotL1")
-                                                      %>% withSpinner(color="#0dc5c1")),
-                                               column(width = 5, plotlyOutput("plotL1param",height = "400px")
-                                                      %>% withSpinner(color="#0dc5c1")))
-                                             ),
-                                    tabPanel("Page2", value="page2"  ,  
+                                                      %>% withSpinner(color="#0dc5c1")) ,
+                                               column(width = 4,h5("Landings in kg by selection:"),
+                                               tableOutput("tabplotL1")%>% withSpinner(color="#0dc5c1"))
+                                               #column(width = 5, plotlyOutput("plotL1param",height = "400px")
+                                                     # %>% withSpinner(color="#0dc5c1")))
+                                             )),
+                                    tabPanel("Page2", value="page2"  , 
                                              fluidRow(
-                                               column(width=12,offset=7,div(
-                                                 style="display: inline-block;vertical-align:top; width: 200px;",
-                                                 selectInput("set2", label = "Select Species",
-                                                             c("None",levels(test$Species)),selectize = T))
-                                                 )),
+                                               column(width=5,offset = 4 ,h4( "Total Landings in kilograms:")),actionButton("info2", icon("info-circle"), style = "padding-top: 7px;
+                                                                   padding-bottom: 5px; padding-right: 20px;")),hr(),
                                              fluidRow(
-                                               column(width = 7,ggiraph::ggiraphOutput("plotL2")
-                                                      %>% withSpinner(color="#0dc5c1")),
-                                               column(width = 5, plotlyOutput("plotL2param",height = "400px")
-                                                      %>% withSpinner(color="#0dc5c1"))
-                                             )))),
+                                               column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("set1", label = "Select Metier",levels(test$Metier_lvl5),selectize = T))
+                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("set2", label = "Select Year",c(2009:2017),selectize = T))
+                                               ),column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("set3", label = "Select Species",levels(test$Species),selectize = T))
+                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("set4", label = "Select Year",c(2009:2017),selectize = T))
+                                               )),
+                                             fluidRow(
+                                             column(width=6,uiOutput("LbySpec")),
+                                             column(width=6,uiOutput("LbyMet")))),
+                                             tabPanel("Page3", value="page3"  , 
+tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing,
+.dataTables_wrapper .dataTables_paginate {color: #ffffff; }thead { color: #ffffff;}tbody {color: #000000; } "
+                )),h3( "Landings Data:"),fluidRow(column(3,
+                                                        selectInput("LYear", "Year:", c("All",unique(as.character(CelticEcoSpecies$Year))),
+                                                                    multiple = F, selected = 'All')), column(3,
+                                                        selectInput("LMetier","Metier:",c("All",unique(as.character(CelticEcoSpecies$FishActEUivl5))),
+                                                                    multiple = F, selected = 'All')),column(3,
+                                                        selectInput("LSpecies","Species:",c("All",unique(as.character(CelticEcoSpecies$Species))),
+                                                                    multiple = F, selected = 'All')),column(3,
+                                                        selectInput("LArea", "Area:",c("All",unique(as.character(CelticEcoSpecies$Area))),
+                                                                    multiple = F, selected = 'All'))),
+                                           # Create a new row for the table.
+                                               fluidRow(
+                                                 DT::dataTableOutput("tableL")
+                                               )))),
                
                tabPanel(" Effort", value = "sb", icon = icon("ship"),
                         fluidRow(
@@ -219,16 +241,56 @@ server <- function(input, output, session) {
     )
   })
   
+  observeEvent(input$info1, {
+    shinyalert(text = "Vizualization of Landings Proportion in Celtic Seas Ecoregion. 
+       <br> The filter elements on the plot  will be animated upon mouse over. By clicking the mouse accociated Landings proportion will be summarized in KGs for <b>Metier</b> and <b>Species</b> by <b>years</b> .",
+      closeOnEsc = TRUE,
+      closeOnClickOutside = TRUE,
+      html = TRUE,
+      type = "info",
+      showConfirmButton = TRUE,
+      showCancelButton = FALSE,
+      confirmButtonText = "OK",
+      confirmButtonCol = "#addd8e",
+      timer = 0,
+      imageUrl = "",
+      animation = TRUE
+    )
+  })
+  
+  observeEvent(input$info2, {
+    shinyalert(text = "Vizualization of Total Landings (KGs) in Celtic Seas Ecoregion. 
+       <br> On the left hand side  is the total landings of species based on the selected <b>Metier</b> and <b>Year</b>.
+       <br> On the right hand side  is the total landings of metier based on the selected <b>Species</b> and <b>Year</b>.
+               The filter elements on the plots  will be animated upon mouse over and summarized in a table by clicking on the selection .",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE,
+               type = "info",
+               showConfirmButton = TRUE,
+               showCancelButton = FALSE,
+               confirmButtonText = "OK",
+               confirmButtonCol = "#addd8e",
+               timer = 0,
+               imageUrl = "",
+               animation = TRUE
+    )
+  })
+  
   ###########Landings plots ##########################
   ###############Page1####################################
   
+  selected_page1 <- reactive({
+    input$plotL1_selected
+  })
   output$plotL1 <-renderggiraph({
+    if(input$name== 1){
     compplot <- ggplot(test, aes(Year,OfficialLanW, fill=Species)) + 
       geom_bar_interactive(stat = "identity", position = "fill",aes(tooltip = Species, data_id = Species)) +
+      ggtitle("The proportion of each landed species by level 5 métier.")+
       ylab("The proportion of total Landings") +
       xlab("Year") + scale_x_continuous(breaks=test$Year) +
-      ggtitle("The proportion of the species landed by each unique level 5 métier") +
-      facet_wrap(~ Metier_lvl5) +
+     facet_wrap(~ Metier_lvl5) +
       theme_grey(base_size = 16) + 
       viridis::scale_fill_viridis(discrete = TRUE) +
       theme(legend.position="bottom", 
@@ -239,68 +301,8 @@ server <- function(input, output, session) {
     x <- girafe_options(x, opts_selection(
       type = "single", css = "fill:#FF3333;stroke:black;"),
       opts_hover(css = "fill:#FF3333;stroke:black;cursor:pointer;"))
-    x
-  })
-
-  
-  a<-levels(test$Metier_lvl5)
-  plotlist1 = list()
-  for(i in 1:length(a)){
-    test1<-filter(test,Metier_lvl5==a[i])
-    compplot <- ggplot(test1, aes(Year,OfficialLanW, fill=Species)) + 
-      geom_bar(stat = "identity") + 
-      #geom_bar_interactive(stat = "identity",aes(tooltip = Species)) +
-      ylab("Total Landings") +
-      xlab("Year") + ggtitle(a[i]) + 
-      scale_x_continuous(breaks=test1$Year) +
-      #geom_bar(stat = "identity") +
-      #facet_wrap(~ FishActEUivl5) +
-      theme_grey(base_size = 16) + 
-      viridis::scale_fill_viridis(discrete = TRUE) +
-      theme(legend.text=element_text(size=10),
-            strip.background = element_blank(),
-            axis.text.x = element_text(angle = 90, hjust = 1))
-    plotlist1[[i]]<-ggplotly(compplot)
-  }
-  
-  output$plotL1param=renderPlotly({
-    if(input$set1=="None"){
-    }else if(input$set1==a[1]){
-      plotlist1[[1]]
-    }else if(input$set1==a[2]){
-      plotlist1[[2]]
-    }else if(input$set1==a[3]){
-      plotlist1[[3]]
-    }else if(input$set1==a[4]){
-      plotlist1[[4]]
-    }else if(input$set1==a[5]){
-      plotlist1[[5]] 
-    }else if(input$set1==a[6]){
-      plotlist1[[6]]
-    }else if(input$set1==a[7]){
-      plotlist1[[7]]
-    }else if(input$set1==a[8]){
-      plotlist1[[8]]
-    }else if(input$set1==a[9]){
-      plotlist1[[9]]
-    }else if(input$set1==a[10]){
-      plotlist1[[10]]
-    }else if(input$set1==a[11]){
-      plotlist1[[11]]
-    }else if(input$set1==a[12]){
-      plotlist1[[12]]
-    }else if(input$set1==a[13]){
-      plotlist1[[13]]
-    }else if(input$set1==a[14]){
-      plotlist1[[14]]
-    }else if(input$set1==a[15]){
-      plotlist1[[15]]}
-  })
-  
-  #########################Page 2#############################
-  
-  output$plotL2 <-renderggiraph({
-    compplot <- ggplot(test, aes(Year,OfficialLanW, fill=Metier_lvl5)) + 
+    x}
+    else if(input$name==2){ compplot <- ggplot(test, aes(Year,OfficialLanW, fill=Metier_lvl5)) + 
       #geom_bar(stat = "identity", aes(fill=fillwhite)) 
       geom_bar_interactive(stat = "identity", position = "fill",aes(tooltip = Metier_lvl5, data_id = Metier_lvl5)) +
       ylab("The proportion of total Landings") +
@@ -317,62 +319,150 @@ server <- function(input, output, session) {
     x <- girafe_options(x, opts_selection(
       type = "single", css = "fill:#FF3333;stroke:black;"),
       opts_hover(css = "fill:#FF3333;stroke:black;cursor:pointer;"))
+    x}
+  })
+  output$tabplotL1 <- renderTable({
+    if(input$name== 1){
+    out <- test[test$Species %in%selected_page1 (), ][-3]
+    if( nrow(out) < 1 ) return(NULL)
+    row.names(out) <- NULL
+    colnames(out)<-c("Year","Metier","Landings in kg")
+    out}
+    else if(input$name== 2)
+    { out <- test[test$Metier_lvl5%in%selected_page1 (), ][-2]
+    if( nrow(out) < 1 ) return(NULL)
+    row.names(out) <- NULL
+    colnames(out)<-c("Year","Species","Landings in kg")
+    out}
+  },caption="t")
+  #,if(input$name== 1){caption="test"}else if(input$name== 2){caption="test1"})
+  
+ 
+
+  #########################Page 2#################################################################################################
+  ##################################################By Species######################################################################
+  selected_pageL21<- reactive({
+    input$plotL21_selected
+  })
+  
+  testL2<-aggregate(CelticEcoSpecies$OfficialLanW,by=list(CelticEcoSpecies$Year,CelticEcoSpecies$FishActEUivl5,CelticEcoSpecies$Species,CelticEcoSpecies$Area),FUN="sum")
+  names(testL2)<-c("Year","Metier_lvl5","Species","Area","OfficialLanW")
+  
+  test1<-reactive({filter(testL2,Year==input$set2 & Metier_lvl5==input$set1)})
+  
+  output$plotL21 <- renderggiraph({
+     
+      gg <- ggplot(test1(), aes(x = Species, y = OfficialLanW, fill = Species )) +
+        geom_bar_interactive(stat = "identity",
+                             aes( data_id = test1()$Species, tooltip = test1()$Species)) +
+        theme_grey(base_size = 16) + ylab("Total Landings in kg")+
+        viridis::scale_fill_viridis(discrete = TRUE)+
+        theme(legend.position="bottom", 
+              legend.text=element_text(size=10),
+              strip.background = element_blank(),axis.text.x = element_text(angle = 90, hjust = 1))
+      x <- girafe(code = print(gg), width_svg = 6, height_svg = 8)
+      x <- girafe_options(x, opts_selection(
+        type = "multiple", css = "fill:#FF3333;stroke:black;"),
+        opts_hover(css = "fill:#FF3333;stroke:black;cursor:pointer;"))
+      x
+  })
+  
+  observeEvent(input$reset1, {
+    session$sendCustomMessage(type = 'plotL21_set', message = character(0))
+  })
+  
+  output$tabplotL21 <- renderTable({
+    out <- test1()[test1()$Species %in% selected_pageL21(), ][-c(1,2)]
+    if( nrow(out) < 1 ) return(NULL)
+    row.names(out) <- NULL
+    out
+  })
+  
+  output$LbySpec<-renderUI({ if(dim(test1())[1]==0){h3(paste("No data available for ", input$set1,"in",input$set2, sep=" "))} 
+   else{list(column(width = 7,
+    ggiraph::ggiraphOutput("plotL21")
+    ), column(width = 3,
+       h4("Selected Species"),
+       tableOutput("tabplotL21"),
+       actionButton("reset1", label = "Reset selection")
+       ))}})
+  
+  
+ 
+  ##################################################By Metier######################################################################
+  
+  
+  selected_pageL22 <- reactive({
+    input$plotL22_selected
+  })
+ test2<-reactive({filter(testL2,Year==input$set4 & Species==input$set3)}) 
+  
+  output$plotL22 <- renderggiraph({
+    gg <- ggplot(test2(), aes(x = Metier_lvl5, y = OfficialLanW, fill = Metier_lvl5)) +
+      geom_bar_interactive(stat = "identity",
+                           aes( data_id = test2()$Metier_lvl5, tooltip = test2()$Metier_lvl5)) +
+      theme_grey(base_size = 16) + ylab("Total Landings in kg")+
+      viridis::scale_fill_viridis(discrete = TRUE)+
+      theme(legend.position="bottom", 
+            legend.text=element_text(size=10),
+            strip.background = element_blank(),axis.text.x = element_text(angle = 90, hjust = 1))
+    x <- girafe(code = print(gg), width_svg = 6, height_svg = 8)
+    x <- girafe_options(x, opts_selection(
+      type = "multiple", css = "fill:#FF3333;stroke:black;"),
+      opts_hover(css = "fill:#FF3333;stroke:black;cursor:pointer;"))
     x
   })
   
-  a1<-levels(test$Species)
-  plotlist2 = list()
-  for(i in 1:length(a1)){
-    test1<-filter(test,Species==a1[i])
-    compplot <- ggplot(test1, aes(Year,OfficialLanW, fill=Metier_lvl5)) + 
-      geom_bar(stat = "identity") + 
-      #geom_bar_interactive(stat = "identity",aes(tooltip = Species)) +
-      ylab("Total Landings") +
-      xlab("Year") + ggtitle(a1[i]) + 
-      scale_x_continuous(breaks=test1$Year) +
-      #geom_bar(stat = "identity") +
-      #facet_wrap(~ FishActEUivl5) +
-      theme_grey(base_size = 16) + 
-      viridis::scale_fill_viridis(discrete = TRUE) +
-      theme(legend.text=element_text(size=10),
-            strip.background = element_blank(),
-            axis.text.x = element_text(angle = 90, hjust = 1))
-    plotlist2[[i]]<-ggplotly(compplot)
-  }
+  observeEvent(input$reset2, {
+    session$sendCustomMessage(type = 'plotL22_set', message = character(0))
+  })
   
-  output$plotL2param=renderPlotly({
-    if(input$set2=="None"){
-    }else if(input$set2==a1[1]){
-      plotlist2[[1]]
-    }else if(input$set2==a1[2]){
-      plotlist2[[2]]
-    }else if(input$set2==a1[3]){
-      plotlist2[[3]]
-    }else if(input$set2==a1[4]){
-      plotlist2[[4]]
-    }else if(input$set2==a1[5]){
-      plotlist2[[5]] 
-    }else if(input$set2==a1[6]){
-      plotlist1[[6]]
-    }else if(input$set2==a1[7]){
-      plotlist2[[7]]
-    }else if(input$set1==a1[8]){
-      plotlist2[[8]]
-    }else if(input$set2==a1[9]){
-      plotlist2[[9]]
-    }else if(input$set2==a1[10]){
-      plotlist2[[10]]
-    }else if(input$set2==a1[11]){
-      plotlist2[[11]]
-    }else if(input$set2==a1[12]){
-      plotlist2[[12]]}
-    })
+  output$ tabplotL22<- renderTable({
+    out <- test2()[test2()$Metier_lvl5 %in% selected_pageL22(), ][-c(1,3)]
+    if( nrow(out) < 1 ) return(NULL)
+    row.names(out) <- NULL
+    out
+  })
+  
+
+  
+  output$LbyMet<-renderUI({ if(dim(test2())[1]==0){h3(paste("No data available for", input$set3,"in",input$set4, sep=" "))} 
+    else{list(column(width = 7,
+                     ggiraph::ggiraphOutput("plotL22")
+    ), column(width = 3,
+              h4("Selected Metier"),
+              tableOutput("tabplotL22"),
+              actionButton("reset2", label = "Reset selection")
+    ))}})
+  
+
+#############################Page 3############################################################################################################
+  # Filter data based on selections
+  
+  output$tableL <- DT::renderDataTable(DT::datatable({
+    L <- CelticEcoSpecies[-c(1,2,4,9,10,12:15,20,21,23,24)]
+    if (input$LYear != "All") {
+      L <- filter(L, Year %in% input$LYear)
+    }
+    if (input$LMetier != "All") {
+      L <- filter(L, FishActEUivl5 %in% input$LMetier)
+    }
+    if (input$LSpecies != "All") {
+      L <- filter(L, Species %in% input$LSpecies)
+    }
+    if (input$LArea != "All") {
+      L <- filter(L, Area %in% input$LArea)
+    }
+    L
+  }))
+  
+  
   
   ##########Efforts page##############
   ###############Page1#################
 
   output$plotE1 <-renderggiraph({
-    compplot <- ggplot(testE, aes(Year,KWperDay, fill=VesselLen)) + 
+    compplot <- ggplot(testE, aes(Year,KW_Day, fill=VesselLen)) + 
       #geom_bar(stat = "identity", aes(fill=fillwhite)) 
       geom_bar_interactive(stat = "identity", position = "fill",
                            aes(tooltip = VesselLen, data_id = VesselLen)) +
@@ -398,10 +488,10 @@ server <- function(input, output, session) {
   plotlist3 = list()
   for(i in 1:length(a)){
     testE1<-filter(testE,Metier_lvl5==a[i])
-    compplot <- ggplot(testE1, aes(Year,KWperDay, fill=VesselLen)) + 
+    compplot <- ggplot(testE1, aes(Year,KW_Day, fill=VesselLen)) + 
       geom_bar(stat = "identity")+ 
       #geom_bar_interactive(stat = "identity",aes(tooltip = Species))+
-      ylab("Total KW Per Day") +
+      ylab("Total KW_Day") +
       xlab("Year") + ggtitle(a[i])+ scale_x_continuous(breaks=test$Year) +
       #geom_bar(stat = "identity") +
       #facet_wrap(~ FishActEUivl5) +
