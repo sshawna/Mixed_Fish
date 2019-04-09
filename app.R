@@ -90,18 +90,55 @@ tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .da
                                                )))),
                
                tabPanel(" Effort", value = "sb", icon = icon("ship"),
-                        fluidRow(
-                          column(width=12,offset=7,div(
-                            style="display: inline-block;vertical-align:top; width: 200px;",
-                            selectInput("set3", label = "Select Metier",
-                                        c("None",levels(testE$Metier_lvl5)),selectize = T))
-                          )),
-                        fluidRow(
-                          column(width = 7,ggiraph::ggiraphOutput("plotE1")
-                                 %>% withSpinner(color="#0dc5c1")),
-                          column(width = 5, plotlyOutput("plotE1param",height = "400px")
-                                 %>% withSpinner(color="#0dc5c1")))
-               ),
+                        tabsetPanel(id="Etabselected", type="pills",
+                                    tabPanel("Page1", value="page1", 
+                                             fluidRow(
+                                               column(width=5,offset = 4 ,h4( "The Proportion of Effort:")),
+                                               actionButton("info3", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),hr(),
+                                             absolutePanel(id="setE",top = 85, left = 450, width = 700, height = "auto", 
+                                                           fixed=FALSE, draggable = TRUE,
+                                                           selectInput("nameE", "Select Parameter:",
+                                                                       choices = c("Metier by Vessel length "=1,"Vessel length by Metier"=2))), br(),br(),
+                                             
+                                             fluidRow(
+                                               column(width = 7,ggiraph::ggiraphOutput("plotE1")
+                                                      %>% withSpinner(color="#0dc5c1")) ,
+                                               column(width = 4,h5("Effort in KW_days by selection:"),
+                                                      tableOutput("tabplotE1")%>% withSpinner(color="#0dc5c1"))
+                                               #column(width = 5, plotlyOutput("plotL1param",height = "400px")
+                                               # %>% withSpinner(color="#0dc5c1")))
+                                             )),
+                                    tabPanel("Page2", value="page2"  , 
+                                             fluidRow(
+                                               column(width=5,offset = 4 ,h4( "Total Effort KW_days:")),actionButton("info4", icon("info-circle"), style = "padding-top: 7px;
+                                                                                                                     padding-bottom: 5px; padding-right: 20px;")),hr(),
+                                             fluidRow(
+                                               column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("setE1", label = "Select Metier",levels(testE$Metier_lvl5),selectize = T))
+                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("setE2", label = "Select Year",c(2009:2017),selectize = T))
+                                               ),column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("setE3", label = "Select Vessel Length",levels(testE$VesselLen),selectize = T))
+                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("setE4", label = "Select Year",c(2009:2017),selectize = T))
+                                               )),
+                                             fluidRow(
+                                               column(width=6,uiOutput("EbyLength")),
+                                               column(width=6,uiOutput("EbyMet")))),
+                                    tabPanel("Page3", value="page3"  , 
+                                             tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
+                                                             .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing,
+                                                             .dataTables_wrapper .dataTables_paginate {color: #ffffff; }thead { color: #ffffff;}tbody {color: #000000; } "
+                                             )),h3( "Effort Data:"),fluidRow(column(3,
+                                                                                    selectInput("EYear", "Year:", c("All",unique(as.character(CelticCE$Year))),
+                                                                                                multiple = F, selected = 'All')), column(3,
+                                                                                                                                         selectInput("EMetier","Metier:",c("All",unique(as.character(CelticCE$FishActEUivl5))),
+                                                                                                                                                     multiple = F, selected = 'All')),column(3,
+                                                                                                                                                                                             selectInput("EVessel","Vessel Length:",c("All",unique(as.character(CelticCE$VesselLen))),
+                                                                                                                                                                                                         multiple = F, selected = 'All')),column(3,
+                                                                                                                                                                                                                                                 selectInput("EArea", "Area:",c("All",unique(as.character(CelticCE$Area))),
+                                                                                                                                                                                                                                                             multiple = F, selected = 'All'))),
+                                             # Create a new row for the table.
+                                             fluidRow(
+                                               DT::dataTableOutput("tableE")
+                                             )))),
+
                tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
                         tabsetPanel(id="Tpanelselected", type="pills",
                                     tabPanel("Raw accessions App", value="page1"),
@@ -293,6 +330,47 @@ server <- function(input, output, session) {
     )
   })
   
+  ###########Information botton Effort Page 1 #########
+  observeEvent(input$info3, {
+    shinyalert(text = "Vizualization of Effort Proportion in Celtic Seas Ecoregion. 
+               <br> The filter elements on the plot  will be animated upon mouse over. By clicking the mouse accociated Effort proportion will be summarized in KW_days for <b>Metier</b> and <b>Vessel Length</b> by <b>years</b> .",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE,
+               type = "info",
+               showConfirmButton = TRUE,
+               showCancelButton = FALSE,
+               confirmButtonText = "OK",
+               confirmButtonCol = "#addd8e",
+               timer = 0,
+               imageUrl = "",
+               animation = TRUE
+    )
+  })
+  
+  ###########Information botton Effort Page 2 #########
+  
+  observeEvent(input$info4, {
+    shinyalert(text = "Vizualization of Total Effort ( KW_days) in Celtic Seas Ecoregion. 
+               <br> On the left hand side  is the total effort of different vessel length  based on the selected <b>Metier</b> and <b>Year</b>.
+               <br> On the right hand side  is the total effort of metier based on the selected <b>Vessel Length</b> and <b>Year</b>.
+               The filter elements on the plots  will be animated upon mouse over and summarized in a table by clicking on the selection .",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE,
+               type = "info",
+               showConfirmButton = TRUE,
+               showCancelButton = FALSE,
+               confirmButtonText = "OK",
+               confirmButtonCol = "#addd8e",
+               timer = 0,
+               imageUrl = "",
+               animation = TRUE
+    )
+  })
+  
+  
+  
   ###########Landings##########################
   ###############Page1#########################
   
@@ -358,7 +436,7 @@ output$tabplotL1 <- renderTable({
 
   ###########Landings##########################
   ###############Page2#########################
-selected_pageL21<- reactive({
+selected_page21<- reactive({
     input$plotL21_selected
   })
   
@@ -388,9 +466,10 @@ observeEvent(input$reset1, {
   })
   
 output$tabplotL21 <- renderTable({
-    out <- test1()[test1()$Species %in% selected_pageL21(), ][-c(1,2)]
+    out <- test1()[test1()$Species %in% selected_page21(), ][-c(1,2)]
     if( nrow(out) < 1 ) return(NULL)
     row.names(out) <- NULL
+    colnames(out)<-c("Species","Area","Landings in kg")
     out
   })
   
@@ -429,23 +508,19 @@ observeEvent(input$reset2, {
     session$sendCustomMessage(type = 'plotL22_set', message = character(0))
   })
   
-output$ tabplotL22<- renderTable({
+output$tabplotL22<- renderTable({
     out <- test2()[test2()$Metier_lvl5 %in% selected_pageL22(), ][-c(1,3)]
     if( nrow(out) < 1 ) return(NULL)
     row.names(out) <- NULL
-    out
-  })
-  
-
+    colnames(out)<-c("Metier","Area","Landings in kg")
+    out})
   
 output$LbyMet<-renderUI({ if(dim(test2())[1]==0){h3(paste("No data available for", input$set3,"in",input$set4, sep=" "))} 
-    else{list(column(width = 7,
-                     ggiraph::ggiraphOutput("plotL22")
+    else{list(column(width = 7, ggiraph::ggiraphOutput("plotL22")
     ), column(width = 3,
               h4("Selected Metier"),
               tableOutput("tabplotL22"),
-              actionButton("reset2", label = "Reset selection")
-    ))}})
+              actionButton("reset2", label = "Reset selection") ))}})
   
 ###########Landings##########################
 ###############Page3#########################
@@ -470,22 +545,23 @@ output$LbyMet<-renderUI({ if(dim(test2())[1]==0){h3(paste("No data available for
   
   
   
-  ##########Efforts page##############
-  ###############Page1#################
+##########Efforts page##############
+###############Page1#################
+selected_pageE1 <- reactive({
+  input$plotE1_selected
+})
 
-  output$plotE1 <-renderggiraph({
+output$plotE1 <-renderggiraph({
+  if(input$nameE== 1){
     compplot <- ggplot(testE, aes(Year,KW_Day, fill=VesselLen)) + 
-      #geom_bar(stat = "identity", aes(fill=fillwhite)) 
-      geom_bar_interactive(stat = "identity", position = "fill",
-                           aes(tooltip = VesselLen, data_id = VesselLen)) +
-      ylab("The proportion of KW per day") +
-      xlab("Year") + scale_x_continuous(breaks=test$Year) +
-      # ggtitle("The proportion of the species landed by each unique level 5 métier") +
-      #geom_bar(stat = "identity") +
+      geom_bar_interactive(stat = "identity", position = "fill",aes(tooltip = VesselLen, data_id = VesselLen)) +
+      ggtitle("The proportion of Vessel type Effort by level 5 métier.")+
+      ylab("The proportion of total Effort") +
+      xlab("Year") + scale_x_continuous(breaks=testE$Year) +
       facet_wrap(~ Metier_lvl5) +
       theme_grey(base_size = 16) + 
       viridis::scale_fill_viridis(discrete = TRUE) +
-      theme(legend.position="bottom",
+      theme(legend.position="bottom", 
             legend.text=element_text(size=10),
             strip.background = element_blank(),
             axis.text.x = element_text(angle = 90, hjust = 1))
@@ -493,62 +569,159 @@ output$LbyMet<-renderUI({ if(dim(test2())[1]==0){h3(paste("No data available for
     x <- girafe_options(x, opts_selection(
       type = "single", css = "fill:#FF3333;stroke:black;"),
       opts_hover(css = "fill:#FF3333;stroke:black;cursor:pointer;"))
-    x
-  })
-  
-  a<-levels(testE$Metier_lvl5)
-  plotlist3 = list()
-  for(i in 1:length(a)){
-    testE1<-filter(testE,Metier_lvl5==a[i])
-    compplot <- ggplot(testE1, aes(Year,KW_Day, fill=VesselLen)) + 
-      geom_bar(stat = "identity")+ 
-      #geom_bar_interactive(stat = "identity",aes(tooltip = Species))+
-      ylab("Total KW_Day") +
-      xlab("Year") + ggtitle(a[i])+ scale_x_continuous(breaks=test$Year) +
-      #geom_bar(stat = "identity") +
-      #facet_wrap(~ FishActEUivl5) +
-      theme_grey(base_size = 16) + 
-      viridis::scale_fill_viridis(discrete = TRUE) +
-      theme(legend.position="NONE", 
-            legend.text=element_text(size=10),
-            strip.background = element_blank(),
-            axis.text.x = element_text(angle = 90, hjust = 1))
-    plotlist3[[i]]<-ggplotly(compplot)
+    x}
+  else if(input$nameE==2){ compplot <- ggplot(testE, aes(Year,KW_Day, fill=Metier_lvl5)) + 
+    #geom_bar(stat = "identity", aes(fill=fillwhite)) 
+    geom_bar_interactive(stat = "identity", position = "fill",aes(tooltip = Metier_lvl5, data_id = Metier_lvl5)) +
+    ylab("The proportion of total Effort") +
+    xlab("Year") + scale_x_continuous(breaks=testE$Year) +
+    ggtitle("The proportion of each level 5 métier  Effort by Vessel Length") +
+    facet_wrap(~ VesselLen) +
+    theme_grey(base_size = 16) + 
+    viridis::scale_fill_viridis(discrete = TRUE) +
+    theme(legend.position="bottom", 
+          legend.text=element_text(size=10),
+          strip.background = element_blank(),
+          axis.text.x = element_text(angle = 90, hjust = 1))
+  x <- girafe(code = print(compplot), width_svg = 13, height_svg = 9)
+  x <- girafe_options(x, opts_selection(
+    type = "single", css = "fill:#FF3333;stroke:black;"),
+    opts_hover(css = "fill:#FF3333;stroke:black;cursor:pointer;"))
+  x}
+})
+
+output$tabplotE1 <- renderTable({
+  if(input$nameE== 1){
+    out <- testE[testE$VesselLen %in%selected_pageE1 (), ][-3]
+    if( nrow(out) < 1 ) return(NULL)
+    row.names(out) <- NULL
+    colnames(out)<-c("Year","Metier","Effort in KW_day")
+    out}
+  else if(input$nameE== 2)
+  { out <- testE[testE$Metier_lvl5%in%selected_pageE1 (), ][-2]
+  if( nrow(out) < 1 ) return(NULL)
+  row.names(out) <- NULL
+  colnames(out)<-c("Year","Vessel Length","Effort in KW_day")
+  out}
+})
+
+
+
+##########Efforts page##############
+###############Page2#################
+
+selected_pageE21<- reactive({
+  input$plotE21_selected
+})
+
+testE1<-aggregate(CelticCE$Kw.days,by=list(CelticCE$Year,CelticCE$FishActEUivl5,CelticCE$VesselLen,CelticCE$Area),FUN="sum")
+                  names(testE1)<-c("Year","Metier_lvl5","VesselLen","Area","KW_days")
+                  
+                  testE11<-reactive({filter(testE1,Year==input$setE2 & Metier_lvl5==input$setE1)})
+                  
+                  output$plotE21 <- renderggiraph({
+                    gg <- ggplot(testE11(), aes(x = VesselLen, y = KW_days, fill = VesselLen )) +
+                      geom_bar_interactive(stat = "identity",
+                                           aes( data_id = testE11()$VesselLen, tooltip = testE11()$VesselLen)) +
+                      theme_grey(base_size = 16) + ylab("Total Effort in KW_day")+
+                      viridis::scale_fill_viridis(discrete = TRUE)+
+                      theme(legend.position="bottom", 
+                            legend.text=element_text(size=10),
+                            strip.background = element_blank(),axis.text.x = element_text(angle = 90, hjust = 1))
+                    x <- girafe(code = print(gg), width_svg = 6, height_svg = 8)
+                    x <- girafe_options(x, opts_selection(
+                      type = "multiple", css = "fill:#FF3333;stroke:black;"),
+                      opts_hover(css = "fill:#FF3333;stroke:black;cursor:pointer;"))
+                    x
+                  })
+                  
+                  observeEvent(input$resetE1, {
+                    session$sendCustomMessage(type = 'plotE21_set', message = character(0))
+                  })
+                  
+                  output$tabplotE21 <- renderTable({
+                    out <- testE11()[testE11()$VesselLen %in% selected_pageE21(), ][-c(1,2)]
+                    if( nrow(out) < 1 ) return(NULL)
+                    row.names(out) <- NULL
+                    out
+                  })
+                  
+                  output$EbyLength<-renderUI({ if(dim(testE11())[1]==0){h3(paste("No data available for ", input$setE1,"in",input$setE2, sep=" "))} 
+                    else{list(column(width = 7,
+                                     ggiraph::ggiraphOutput("plotE21")),
+                              column(width = 3,
+                                     h4("Selected Vessel length"),
+                                     tableOutput("tabplotE21"),
+                                     actionButton("resetE1", label = "Reset selection")
+                              ))}})
+                  
+                  selected_pageE22 <- reactive({
+                    input$plotE22_selected
+                  })
+                  
+                  testE12<-reactive({filter(testE1,Year==input$setE4 & VesselLen ==input$setE3)}) 
+                  
+                  output$plotE22 <- renderggiraph({
+                    gg <- ggplot(testE12(), aes(x = Metier_lvl5, y = KW_days, fill = Metier_lvl5)) +
+                      geom_bar_interactive(stat = "identity",
+                                           aes( data_id = testE12()$Metier_lvl5, tooltip = testE12()$Metier_lvl5)) +
+                      theme_grey(base_size = 16) + ylab("Total Effort in KW_day")+
+                      viridis::scale_fill_viridis(discrete = TRUE)+
+                      theme(legend.position="bottom", 
+                            legend.text=element_text(size=10),
+                            strip.background = element_blank(),axis.text.x = element_text(angle = 90, hjust = 1))
+                    x <- girafe(code = print(gg), width_svg = 6, height_svg = 8)
+                    x <- girafe_options(x, opts_selection(
+                      type = "multiple", css = "fill:#FF3333;stroke:black;"),
+                      opts_hover(css = "fill:#FF3333;stroke:black;cursor:pointer;"))
+                    x
+                  })
+                  
+                  observeEvent(input$resetE2, {
+                    session$sendCustomMessage(type = 'plotE22_set', message = character(0))
+                  })
+                  
+                  output$ tabplotE22<- renderTable({
+                    out <- testE12()[testE12()$Metier_lvl5 %in% selected_pageE22(), ][-c(1,3)]
+                    if( nrow(out) < 1 ) return(NULL)
+                    row.names(out) <- NULL
+                    out
+                  })
+                  
+                  
+                  
+                  output$EbyMet<-renderUI({ if(dim(testE12())[1]==0){h3(paste("No data available for", input$setE3,"in",input$setE4, sep=" "))} 
+                    else{list(column(width = 7,
+                                     ggiraph::ggiraphOutput("plotE22")
+                    ), column(width = 3,
+                              h4("Selected Metier"),
+                              tableOutput("tabplotE22"),
+                              actionButton("resetE2", label = "Reset selection")
+                    ))}})
+
+
+
+###########Effort##########################
+###############Page3#########################
+
+# Filter data based on selections
+
+output$tableE <- DT::renderDataTable(DT::datatable({
+  E <-CelticCE[-c(1,2,3,8:10,16,19)]
+  if (input$EYear != "All") {
+    E <- filter(E, Year %in% input$EYear)
   }
-  
-  output$plotE1param=renderPlotly({
-    if(input$set3=="None"){
-    }else if(input$set3==a[1]){
-      plotlist3[[1]]
-    }else if(input$set3==a[2]){
-      plotlist3[[2]]
-    }else if(input$set3==a[3]){
-      plotlist3[[3]]
-    }else if(input$set3==a[4]){
-      plotlist3[[4]]
-    }else if(input$set3==a[5]){
-      plotlist3[[5]] 
-    }else if(input$set3==a[6]){
-      plotlist3[[6]]
-    }else if(input$set3==a[7]){
-      plotlist3[[7]]
-    }else if(input$set3==a[8]){
-      plotlist3[[8]]
-    }else if(input$set1==a[9]){
-      plotlist1[[9]]
-    }else if(input$set1==a[10]){
-      plotlist3[[10]]
-    }else if(input$set3==a[11]){
-      plotlist3[[11]]
-    }else if(input$set3==a[12]){
-      plotlist3[[12]]
-    }else if(input$set3==a[13]){
-      plotlist3[[13]]
-    }else if(input$set3==a[14]){
-      plotlist3[[14]]
-    }else if(input$set3==a[15]){
-      plotlist3[[15]]}
-    })
+  if (input$EMetier != "All") {
+    E <- filter(E, FishActEUivl5 %in% input$EMetier)
+  }
+  if (input$EVessel != "All") {
+    E <- filter(E, VesselLen %in% input$EVessel)
+  }
+  if (input$EArea != "All") {
+    E <- filter(E, Area %in% input$EArea)
+  }
+  E}))
+
 }
 
 shinyApp(ui, server)
