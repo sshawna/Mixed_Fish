@@ -11,6 +11,7 @@ library(shinycssloaders)
 library(tidyverse)
 library(viridis)
 library(DT)
+library(dplyr)
 options(scipen=999)
 
 data_fish <-  read.csv(file="data/Hackathon/Data.csv") 
@@ -22,141 +23,10 @@ CelticCE<-read.csv("data/CelticCE.csv")
 testE<-aggregate(CelticCE$Kw.days,by=list(CelticCE$Year,CelticCE$FishActEUivl5,CelticCE$VesselLen),FUN="sum")
 names(testE)<-c("Year","Metier_lvl5","VesselLen","KW_Day")
 
-ui <- fluidPage(
 
-  theme = shinytheme("superhero"), #spacelab
-  titlePanel("Mixed Fisheries"),
-  navlistPanel(id="mainpanel", widths=c(2,10), 
-               tabPanel(" Introduction", value = "mp", icon = icon("home"),
-                        useShinyalert(),  
-                        tags$li(class = "dropdown",
-                                actionButton("about", "About"),
-                                style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),
 
-               tabPanel(" Hackathon Work", value = "hw", icon = icon("folder-open"),
-                        h3("Visualising the implications of catch decreases for fleets in a mixed fishery context"),
-                        plotOutput("plot"),
-                        absolutePanel(id="controls",top = 80, left = 700, width = 400, height = "auto", fixed=FALSE, draggable = TRUE,
-                        sliderInput("whitingslider", "Choose % reduction in Whiting Catch:", min = -100, max =0, value = 0, 
-                                                  step = NULL, sep = "", animate = FALSE, post  = " %"))),
-               tabPanel(" Landings",value = "mi", icon = icon("fish"), 
-                        tabsetPanel(id="Ltabselected", type="pills",
-                                    tabPanel("Page1", value="page1", 
-                                             fluidRow(
-                                               column(width=5,offset = 4 ,h4( "The Proportion of Landings:")),
-                                               actionButton("info1", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),hr(),
-                                            absolutePanel(id="set",top = 85, left = 450, width = 700, height = "auto", 
-                                                             fixed=FALSE, draggable = TRUE,
-                                                              selectInput("name", "Select Parameter:",
-                                                              choices = c("Metier by Species"=1,"Species by Metier"=2))), br(),br(),
-                                               
-                                               fluidRow(
-                                               column(width = 7,ggiraph::ggiraphOutput("plotL1")
-                                                      %>% withSpinner(color="#0dc5c1")) ,
-                                               column(width = 4,h5("Landings in kg by selection:"),
-                                               tableOutput("tabplotL1")%>% withSpinner(color="#0dc5c1"))
-                                               #column(width = 5, plotlyOutput("plotL1param",height = "400px")
-                                                     # %>% withSpinner(color="#0dc5c1")))
-                                             )),
-                                    tabPanel("Page2", value="page2"  , 
-                                             fluidRow(
-                                               column(width=5,offset = 4 ,h4( "Total Landings in kilograms:")),actionButton("info2", icon("info-circle"), style = "padding-top: 7px;
-                                                                   padding-bottom: 5px; padding-right: 20px;")),hr(),
-                                             fluidRow(
-                                               column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("set1", label = "Select Metier",levels(test$Metier_lvl5),selectize = T))
-                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("set2", label = "Select Year",c(2009:2017),selectize = T))
-                                               ),column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("set3", label = "Select Species",levels(test$Species),selectize = T))
-                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("set4", label = "Select Year",c(2009:2017),selectize = T))
-                                               )),
-                                             fluidRow(
-                                             column(width=6,uiOutput("LbySpec")),
-                                             column(width=6,uiOutput("LbyMet")))),
-                                             tabPanel("Page3", value="page3"  , 
-tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
-.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing,
-.dataTables_wrapper .dataTables_paginate {color: #ffffff; }thead { color: #ffffff;}tbody {color: #000000; } "
-                )),h3( "Landings Data:"),fluidRow(column(3,
-                                                        selectInput("LYear", "Year:", c("All",unique(as.character(CelticEcoSpecies$Year))),
-                                                                    multiple = F, selected = 'All')), column(3,
-                                                        selectInput("LMetier","Metier:",c("All",unique(as.character(CelticEcoSpecies$FishActEUivl5))),
-                                                                    multiple = F, selected = 'All')),column(3,
-                                                        selectInput("LSpecies","Species:",c("All",unique(as.character(CelticEcoSpecies$Species))),
-                                                                    multiple = F, selected = 'All')),column(3,
-                                                        selectInput("LArea", "Area:",c("All",unique(as.character(CelticEcoSpecies$Area))),
-                                                                    multiple = F, selected = 'All'))),
-                                           # Create a new row for the table.
-                                               fluidRow(
-                                                 DT::dataTableOutput("tableL")
-                                               )))),
-               
-               tabPanel(" Effort", value = "sb", icon = icon("ship"),
-                        tabsetPanel(id="Etabselected", type="pills",
-                                    tabPanel("Page1", value="page1", 
-                                             fluidRow(
-                                               column(width=5,offset = 4 ,h4( "The Proportion of Effort:")),
-                                               actionButton("info3", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),hr(),
-                                             absolutePanel(id="setE",top = 85, left = 450, width = 700, height = "auto", 
-                                                           fixed=FALSE, draggable = TRUE,
-                                                           selectInput("nameE", "Select Parameter:",
-                                                                       choices = c("Metier by Vessel length "=1,"Vessel length by Metier"=2))), br(),br(),
-                                             
-                                             fluidRow(
-                                               column(width = 7,ggiraph::ggiraphOutput("plotE1")
-                                                      %>% withSpinner(color="#0dc5c1")) ,
-                                               column(width = 4,h5("Effort in KW_days by selection:"),
-                                                      tableOutput("tabplotE1")%>% withSpinner(color="#0dc5c1"))
-                                               #column(width = 5, plotlyOutput("plotL1param",height = "400px")
-                                               # %>% withSpinner(color="#0dc5c1")))
-                                             )),
-                                    tabPanel("Page2", value="page2"  , 
-                                             fluidRow(
-                                               column(width=5,offset = 4 ,h4( "Total Effort KW_days:")),actionButton("info4", icon("info-circle"), style = "padding-top: 7px;
-                                                                                                                     padding-bottom: 5px; padding-right: 20px;")),hr(),
-                                             fluidRow(
-                                               column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("setE1", label = "Select Metier",levels(testE$Metier_lvl5),selectize = T))
-                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("setE2", label = "Select Year",c(2009:2017),selectize = T))
-                                               ),column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("setE3", label = "Select Vessel Length",levels(testE$VesselLen),selectize = T))
-                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("setE4", label = "Select Year",c(2009:2017),selectize = T))
-                                               )),
-                                             fluidRow(
-                                               column(width=6,uiOutput("EbyLength")),
-                                               column(width=6,uiOutput("EbyMet")))),
-                                    tabPanel("Page3", value="page3"  , 
-                                             tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
-                                                             .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing,
-                                                             .dataTables_wrapper .dataTables_paginate {color: #ffffff; }thead { color: #ffffff;}tbody {color: #000000; } "
-                                             )),h3( "Effort Data:"),fluidRow(column(3,
-                                                                                    selectInput("EYear", "Year:", c("All",unique(as.character(CelticCE$Year))),
-                                                                                                multiple = F, selected = 'All')), column(3,
-                                                                                                                                         selectInput("EMetier","Metier:",c("All",unique(as.character(CelticCE$FishActEUivl5))),
-                                                                                                                                                     multiple = F, selected = 'All')),column(3,
-                                                                                                                                                                                             selectInput("EVessel","Vessel Length:",c("All",unique(as.character(CelticCE$VesselLen))),
-                                                                                                                                                                                                         multiple = F, selected = 'All')),column(3,
-                                                                                                                                                                                                                                                 selectInput("EArea", "Area:",c("All",unique(as.character(CelticCE$Area))),
-                                                                                                                                                                                                                                                             multiple = F, selected = 'All'))),
-                                             # Create a new row for the table.
-                                             fluidRow(
-                                               DT::dataTableOutput("tableE")
-                                             )))),
 
-               tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
-                        tabsetPanel(id="Tpanelselected", type="pills",
-                                    tabPanel("Raw accessions App", value="page1"),
-                                    tabPanel("Effort App", value="page2"),
-                                    tabPanel("Catchability App", value="page3"),
-                                    tabPanel("Partial F App", value="page4"),
-                                    tabPanel("Quota share App", value="page5")
-                                    )),
-               tabPanel(" Schenarios", value ="sc", icon = icon("line-chart"))
-  ),
-  hr(),
-  fluidRow(width =12,
-           img(src="Logos/Niamh.png", width = "1250px", height = "100px", 
-               style="display: block; margin-left: auto; margin-right: auto;margin-top:0em")
-  )
-)
-
-############################################################################################
+########################################## Server ##################################################
 
 server <- function(input, output, session) {
   output$plot <- renderPlot({
@@ -369,8 +239,7 @@ server <- function(input, output, session) {
     )
   })
   
-  
-  
+
   ###########Landings##########################
   ###############Page1#########################
   
@@ -605,8 +474,6 @@ output$tabplotE1 <- renderTable({
   out}
 })
 
-
-
 ##########Efforts page##############
 ###############Page2#################
 
@@ -722,6 +589,475 @@ output$tableE <- DT::renderDataTable(DT::datatable({
   }
   E}))
 
+
+ ###########Existing tools##########################
+############## 3. Effort app #######################
+ # partF <-reactive(
+   # if(input$Area_selector == "North_Sea") {
+   #   readRDS("data/existing_tools/5.partial_F_app/data/North_Sea/partF.RDS")
+   # }else if(input$Area_selector == "Celtic_Sea") {
+    #  readRDS("data/existing_tools/5.partial_F_app/data/Celtic_Sea/CSpartF.rds")
+   # }
+  #)
+  output$fleet.yearfilter <- renderUI({
+    selectInput("year","Year:",c("All",sort(unique(as.character(partF()$year)),decreasing=T))
+    )
+  })
+  output$fleet.countryfilter <- renderUI({
+    selectInput("country","Country",c("All",sort(unique(as.character(partF()$country)))),selected="All")
+  })
+  
+  output$time.countryfilter <- renderUI({
+    selectInput("country1","Country:",c("All",sort(unique(as.character(partF()$country)))),selected="All"
+    )})
+  
+  output$efftable <- DT::renderDataTable(DT::datatable({
+     #aggregate across stocks (take mean)
+    data <- reactive(partF()[,c("year","country", "fleet", "metier","effort","effshare")])
+    data <- aggregate(list(effort =data()$effort, effshare = data()$effshare),
+                      list(year=data()$year,country = data()$country, fleet=data()$fleet,metier=data()$metier), mean)
+    if (input$year != "All") {
+      data <- data[data$year == input$year,]
+    }
+    if (input$country != "All") {
+      data <- data[data$country == input$country,]
+    }
+    data[,c("effort","effshare")] <- round(data[,c("effort","effshare")],2) 
+    data
+  })) 
+  
+  output$plotCatch <- renderPlot({
+    dataplot1 <- partF()
+    dataplot1$effmet <- dataplot1$effort*dataplot1$effshare
+    if (input$country1 != "All") {
+      dataplot1  <- dataplot1[dataplot1$country %in% input$country1,]
+    }
+    print(ggplot(dataplot1, aes(x = year, y = effmet,group=metier)) +
+            geom_point(aes(colour = factor(metier))) + geom_line(aes(group = metier)) +
+            facet_wrap(~fleet,scales="free_y") +
+            theme_bw())
+  })                  
+  
+  output$plotCatch_Fl <- renderPlot({
+    # aggregate across stocks (take mean)
+    data <- partF()[,c("year","country", "fleet", "metier","effort","effshare")]
+    data <- aggregate(list(effort =data$effort, effshare = data$effshare),list(year=data$year,country = data$country, 
+                                                                               fleet=data$fleet,metier=data$metier), mean)
+    data <- aggregate(list(effort =data$effort),list(year=data$year,country = data$country, 
+                                                     fleet=data$fleet), mean)
+    if(input$Area_selector == "North_Sea"){ #to avoid distorsion in plot for these two fleets
+      data[data$fleet %in% c("EN_Otter24-40","EN_FDF","EN_Otter>=40","EN_Otter<24"),"fleet"] <- "EN_Otter + FDF"
+      data[data$fleet %in% c("DK_Seine","DK_Otter<24"),"fleet"] <- "DK_Otter<24 + Seine"
+      data <- aggregate(list(effort =data$effort),list(year=data$year,country = data$country, 
+                                                       fleet=data$fleet), sum)
+    } 
+    data_ori <- subset(data,year==min(data$year))
+    names(data_ori)[4] <- "effort_ori" 
+    data <- merge(data,data_ori[-1],all.x=T) #might need ()
+    data$eff_rel <- data$effort/data$effort_ori
+    
+    print(ggplot(data, aes(x = year, y = eff_rel)) +
+            geom_point() + geom_line() +# geom_smooth(method = lm, fullrange = FALSE, aes(colour = factor(metier))) +
+            facet_wrap(~fleet) +
+            geom_hline(yintercept=1,linetype="dashed") +
+            theme_bw()) #+ scale_x_continuous(breaks = seq(2004,2014,by=4)))
+    })     
+
+ ############ 4. Catchability app ##################
+  catchability <- reactive(
+    if(input$Area_selector == "North_Sea") {
+      readRDS("data/existing_tools/4.catchability_app/data/North_Sea/NScatchability.rds")
+    }else if(input$Area_selector == "Celtic_Sea") {
+      readRDS("data/existing_tools/4.catchability_app/data/Celtic_Sea/CScatchability.rds")
+    }
+  )
+  output$table.yearfilter <- renderUI({
+    selectInput("year","Year:",c("All",sort(unique(as.character(catchability()$year)),decreasing=TRUE))
+    )
+  })
+  output$table.stockfilter <- renderUI({
+    selectInput("Stock","Stock", c("All",sort(unique(as.character(catchability()$stock))))
+    )
+  })
+  output$plot.countryfilter <- renderUI({
+    selectInput("country","Country:",c("All",sort(unique(as.character(catchability()$country))))
+    )
+  })
+  output$plot.stockfilter <- renderUI({
+    selectInput("stock","Stock:",c("All",sort(unique(as.character(catchability()$stock)))),
+                multiple=TRUE, selected="All"
+    )
+  })
+  
+  output$Catchtable <- DT::renderDataTable(DT::datatable({
+    data <- catchability()[,c("year","stock","fleet", "metier","logq","country")]
+    if (input$year != "All") {
+      data <- data[data$year == input$year,]
+    }
+    if (input$Stock != "All") {
+      data <- data[data$stock == input$Stock,]
+    }
+    data[,c("logq")] <- round(data[,c("logq")], 2)
+    data[,c("year","country","fleet","metier","stock","logq")]
+  }))
+  
+  output$plotCatch <- renderPlot({
+    data <- catchability()
+    if (input$country != "All") {
+      data <- data[data$country %in% input$country,]
+    }
+    if (input$stock != "All") {
+      data <- data[data$stock %in% input$stock,]
+    }
+    #remove OTH
+    data <- data[data$metier!="OTH",]
+    print(ggplot(data, aes(x = year, y = logq,group=stock)) +
+            geom_point(aes(colour=stock)) + geom_smooth(method = loess, fullrange = FALSE,aes(colour=stock)) +
+            facet_wrap(fleet ~ metier,scales="free_y") +
+            theme_bw())# + scale_x_continuous(breaks = seq(2004,2014,by=4)))
+  })
+  
+  ################### 5. Partial F app #########################
+  partF <-readRDS("data/existing_tools/5.partial_F_app/data/Celtic_Sea/partF.RDS")
+  #partF <- reactive(
+    #if(input$Area_selector == "North_Sea") {
+     # readRDS("data/existing_tools/5.partial_F_app/data/North_Sea/partF.rds")
+   # }else if(input$Area_selector == "Celtic_Sea") {
+    #  readRDS("data/existing_tools/5.partial_F_app/data/Celtic_Sea/partF.rds")
+    #}
+  #)
+  
+  output$PF.year.table <- renderUI({
+    selectInput("year","Year:", c("All",sort(unique(as.character(partF()$year)),decreasing=T)))
+  })
+  output$PF.stock.table <- renderUI({
+    selectInput("Stock","Stock",c("All",sort(unique(as.character(partF()$stock)))))
+  })
+  output$PF.country.plot1 <- renderUI({
+    selectInput("country","Country:",c("All",sort(unique(as.character(partF()$country)))),selected = 'BE')
+  })
+  output$PF.stock.plot1 <- renderUI({
+    selectInput("stock", "Stock:",c("All",sort(unique(as.character(partF()$stock)))),
+                multiple=TRUE,selected = 'All')
+  })
+  output$PF.year.plot2 <- renderUI({
+    selectInput("year_","Year:",c("All",sort(unique(as.character(partF()$year)),
+                                             decreasing=T)),selected = 'All')
+  })
+  output$PF.stock.plot2 <- renderUI({
+    selectInput("stocks","Stocks:",c("All",sort(unique(as.character(partF()$stock)))),
+                multiple=T,selected = 'All')
+  })
+  output$PFtable <- DT::renderDataTable(DT::datatable({
+    data <- partF()[,c("year","stock","fleet", "metier","partF","country")]
+    
+    if (input$year != "All") {
+      data <- data[data$year == input$year,]
+    }
+    if (input$Stock != "All") {
+      data <- data[data$stock == input$Stock,]
+    }
+    data[,c("partF")] <- round(data[,c("partF")],8)
+    data[,c("year","country","fleet","metier","stock","partF")]
+   }))
+  
+ output$plotCatch <- renderPlot({
+    data <- partF()
+    data <- aggregate(list(partF=data$partF),list(year=data$year,stock=data$stock,
+                                                  fleet=data$fleet, metier=data$metier,country=data$country),sum)
+    data <- merge(data,aggregate(data$partF,list(year=data$year,stock=data$stock),sum,na.rm=T))
+    data$percent <- data$partF/data$x
+    if (input$country != "All") {
+      data <- data[data$country %in% input$country,]
+    }
+    
+    if (any(length(input$stock)>1 | input$stock != "All")) {
+      data <- data[data$stock %in% input$stock,]
+    }
+    
+    data <- subset(data, !is.na(percent))
+    
+    #remove OTH
+    data <- data[data$metier!="OTH",]
+    
+    print(ggplot(data, aes(x = year, y = percent,group=stock)) +
+            geom_point(aes(colour = factor(stock))) + geom_smooth(method = lm, fullrange = FALSE, aes(colour = factor(stock))) +
+            facet_wrap(fleet ~ metier,scales="free_y") +
+            theme_bw() + scale_x_continuous(breaks = seq(2004,2014,by=4)))
+    })
+  
+  output$Spiderplot <- renderPlot({
+    data <- partF()
+    
+    if (input$year_ != "All") {
+      data <- data[data$year %in% input$year_,]
+    }
+    
+    if (input$stocks != "All") {
+      data <- data[data$stock %in% input$stocks,]
+    }
+    #remove OTH
+    data <- data[data$metier!="OTH",]
+    data <- aggregate(list(partF=data$partF),list(stock=data$stock,fleet=data$fleet),sum)
+    data <- merge(data,aggregate(data$partF,list(stock=data$stock),sum))
+    data$percent <- data$partF/data$x
+    nstock <- length(input$stocks)
+    print(ggplot(data,aes(x=stock,y=percent,col=stock)) + 
+            facet_wrap(~fleet,ncol=7) + coord_polar() + 
+            geom_bar(stat="identity",fill=NA) + theme_bw() + 
+            theme(legend.position="none") + 
+            theme(strip.text.x = element_text(size = rel(0.8)),
+                  axis.text.x = element_text(size = rel(0.5),
+                                             angle = 360/(2*pi)*rev( pi/2 + seq( pi/nstock, 2*pi-pi/nstock, len=nstock))
+                 ))
+    )
+   })            
 }
+
+########################################## ui ##################################################
+
+
+ui <- fluidPage(
+  
+  theme = shinytheme("superhero"), #spacelab
+  titlePanel("Mixed Fisheries"),
+  navlistPanel(id="mainpanel", widths=c(2,10), 
+               tabPanel(" Introduction", value = "mp", icon = icon("home"),
+                        useShinyalert(),  
+                        tags$li(class = "dropdown",
+                                actionButton("about", "About"),
+                                style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),
+               
+               tabPanel(" Hackathon Work", value = "hw", icon = icon("folder-open"),
+                        h3("Visualising the implications of catch decreases for fleets in a mixed fishery context"),
+                        plotOutput("plot"),
+                        absolutePanel(id="controls",top = 80, left = 700, width = 400, height = "auto", fixed=FALSE, draggable = TRUE,
+                                      sliderInput("whitingslider", "Choose % reduction in Whiting Catch:", min = -100, max =0, value = 0, 
+                                                  step = NULL, sep = "", animate = FALSE, post  = " %"))),
+               tabPanel(" Landings",value = "mi", icon = icon("fish"), 
+                        tabsetPanel(id="Ltabselected", type="pills",
+                                    tabPanel("Page1", value="page1", 
+                                             fluidRow(
+                                               column(width=5,offset = 4 ,h4( "The Proportion of Landings:")),
+                                               actionButton("info1", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),hr(),
+                                             absolutePanel(id="set",top = 85, left = 450, width = 700, height = "auto", 
+                                                           fixed=FALSE, draggable = TRUE,
+                                                           selectInput("name", "Select Parameter:",
+                                                                       choices = c("Metier by Species"=1,"Species by Metier"=2))), br(),br(),
+                                             
+                                             fluidRow(
+                                               column(width = 7,ggiraph::ggiraphOutput("plotL1")
+                                                      %>% withSpinner(color="#0dc5c1")) ,
+                                               column(width = 4,h5("Landings in kg by selection:"),
+                                                      tableOutput("tabplotL1")%>% withSpinner(color="#0dc5c1"))
+                                             )),
+                                    tabPanel("Page2", value="page2"  , 
+                                             fluidRow(
+                                               column(width=5,offset = 4 ,h4( "Total Landings in kilograms:")),actionButton("info2", icon("info-circle"), style = "padding-top: 7px;
+                                                                                                                            padding-bottom: 5px; padding-right: 20px;")),hr(),
+                                             fluidRow(
+                                               column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("set1", label = "Select Metier",levels(test$Metier_lvl5),selectize = T))
+                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("set2", label = "Select Year",c(2009:2017),selectize = T))
+                                               ),column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("set3", label = "Select Species",levels(test$Species),selectize = T))
+                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("set4", label = "Select Year",c(2009:2017),selectize = T))
+                                               )),
+                                             fluidRow(
+                                               column(width=6,uiOutput("LbySpec")),
+                                               column(width=6,uiOutput("LbyMet")))),
+                                    tabPanel("Page3", value="page3"  , 
+                                             tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
+                                                             .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing,
+                                                             .dataTables_wrapper .dataTables_paginate {color: #ffffff; }thead { color: #ffffff;}tbody {color: #000000; } "
+                                             )),h3( "Landings Data:"),fluidRow(column(3,
+                                                                                      selectInput("LYear", "Year:", c("All",unique(as.character(CelticEcoSpecies$Year))),
+                                                                                                  multiple = F, selected = 'All')), column(3,
+                                                                                                                                           selectInput("LMetier","Metier:",c("All",unique(as.character(CelticEcoSpecies$FishActEUivl5))),
+                                                                                                                                                       multiple = F, selected = 'All')),column(3,
+                                                                                                                                                                                               selectInput("LSpecies","Species:",c("All",unique(as.character(CelticEcoSpecies$Species))),
+                                                                                                                                                                                                           multiple = F, selected = 'All')),column(3,
+                                                                                                                                                                                                                                                   selectInput("LArea", "Area:",c("All",unique(as.character(CelticEcoSpecies$Area))),
+                                                                                                                                                                                                                                                               multiple = F, selected = 'All'))),
+                                             # Create a new row for the table.
+                                             fluidRow(
+                                               DT::dataTableOutput("tableL")
+                                             )))),
+               
+               tabPanel(" Effort", value = "sb", icon = icon("ship"),
+                        tabsetPanel(id="Etabselected", type="pills",
+                                    tabPanel("Page1", value="page1", 
+                                             fluidRow(
+                                               column(width=5,offset = 4 ,h4( "The Proportion of Effort:")),
+                                               actionButton("info3", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;")),hr(),
+                                             absolutePanel(id="setE",top = 85, left = 450, width = 700, height = "auto", 
+                                                           fixed=FALSE, draggable = TRUE,
+                                                           selectInput("nameE", "Select Parameter:",
+                                                                       choices = c("Metier by Vessel length "=1,"Vessel length by Metier"=2))), br(),br(),
+                                             
+                                             fluidRow(
+                                               column(width = 7,ggiraph::ggiraphOutput("plotE1")
+                                                      %>% withSpinner(color="#0dc5c1")) ,
+                                               column(width = 4,h5("Effort in KW_days by selection:"),
+                                                      tableOutput("tabplotE1")%>% withSpinner(color="#0dc5c1"))
+                                               #column(width = 5, plotlyOutput("plotL1param",height = "400px")
+                                               # %>% withSpinner(color="#0dc5c1")))
+                                             )),
+                                    tabPanel("Page2", value="page2"  , 
+                                             fluidRow(
+                                               column(width=5,offset = 4 ,h4( "Total Effort KW_days:")),actionButton("info4", icon("info-circle"), style = "padding-top: 7px;
+                                                                                                                     padding-bottom: 5px; padding-right: 20px;")),hr(),
+                                             fluidRow(
+                                               column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("setE1", label = "Select Metier",levels(testE$Metier_lvl5),selectize = T))
+                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("setE2", label = "Select Year",c(2009:2017),selectize = T))
+                                               ),column(width=3,div(style="display: inline-block;vertical-align:top; width: 125px;",selectInput("setE3", label = "Select Vessel Length",levels(testE$VesselLen),selectize = T))
+                                               ), column(width=3,div(style="display: inline-block;vertical-align:top; width: 100px;",selectInput("setE4", label = "Select Year",c(2009:2017),selectize = T))
+                                               )),
+                                             fluidRow(
+                                               column(width=6,uiOutput("EbyLength")),
+                                               column(width=6,uiOutput("EbyMet")))),
+                                    tabPanel("Page3", value="page3"  , 
+                                             tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
+                                                             .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing,
+                                                             .dataTables_wrapper .dataTables_paginate {color: #ffffff; }thead { color: #ffffff;}tbody {color: #000000; } "
+                                             )),h3( "Effort Data:"),fluidRow(column(3,
+                                                                                    selectInput("EYear", "Year:", c("All",unique(as.character(CelticCE$Year))),
+                                                                                                multiple = F, selected = 'All')), column(3,
+                                                                                                                                         selectInput("EMetier","Metier:",c("All",unique(as.character(CelticCE$FishActEUivl5))),
+                                                                                                                                                     multiple = F, selected = 'All')),column(3,
+                                                                                                                                                                                             selectInput("EVessel","Vessel Length:",c("All",unique(as.character(CelticCE$VesselLen))),
+                                                                                                                                                                                                         multiple = F, selected = 'All')),column(3,
+                                                                                                                                                                                                                                                 selectInput("EArea", "Area:",c("All",unique(as.character(CelticCE$Area))),
+                                                                                                                                                                                                                                                             multiple = F, selected = 'All'))),
+                                             # Create a new row for the table.
+                                             fluidRow(
+                                               DT::dataTableOutput("tableE")
+                                             )))),
+               
+               tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
+                        selectInput("Area_selector","Select Area", choices=c("North_Sea", "Celtic_Sea"), selected = "North_Sea"),
+                        selectInput(inputId = "Toolselected", label="Tool", choices=c("Raw accessions App","Effort App","Catchability App","Partial F App","Quota share App"),
+                                    multiple=FALSE, selected = "Catchability App"),
+                                    #conditionalPanel("input.Toolselected=='Raw accessions App'"),
+                                    conditionalPanel(condition = "input.Toolselected == 'Effort App'",
+                                             tabsetPanel(id="effortappPanel", type="pills",
+                                                         tabPanel("Fleet Effort Tables",
+                                                                  fluidPage(
+                                                                    titlePanel("Effort data"), #paste(textOutput("Area"),
+                                                                    fluidRow(
+                                                                      column(3,uiOutput("fleet.yearfilter")),
+                                                                      column(3,uiOutput("fleet.countryfilter"))
+                                                                    ),
+                                                                    fluidRow(
+                                                                      DT::dataTableOutput("efftable")
+                                                                      %>% withSpinner(color="#0dc5c1")
+                                                                    )
+                                                                  )),
+                                                         tabPanel("Effort time series",
+                                                                  fluidPage(
+                                                                    titlePanel("Effort data"), #paste(Area,"Effort data")),
+                                                                    fluidRow(
+                                                                      column(3,uiOutput("time.countryfilter")) 
+                                                                    ),
+                                                                    mainPanel(
+                                                                      plotOutput("plotCatch", width = '800px', height = '800px')
+                                                                      %>% withSpinner(color="#0dc5c1")
+                                                                    )
+                                                                  ) #end of fluidPage
+                                                         ),#end of tabPanel
+                                                         tabPanel("Total effort by fleet",
+                                                                  fluidPage(
+                                                                    titlePanel(paste("Effort by fleet relative to first data year")), #paste(Area,"Effort by fleet relative to first data year")),
+                                                                    mainPanel(
+                                                                      plotOutput("plotCatch_Fl", width = '800px', height = '800px')
+                                                                     %>% withSpinner(color="#0dc5c1")
+                                                                    )
+                                                                  ) #end of FluidPage
+                                                          ) #end of tabPanel
+                                                        ) #end of tabsetPanel
+                                             ), #end of conditionalPanel
+                                conditionalPanel("input.Toolselected == 'Catchability App'", 
+                                            tabsetPanel(id="FleetCatchabilityPanel", type="tabs",
+                                                         tabPanel("Fleet Catchability Tables",
+                                                                  fluidPage(
+                                                                    titlePanel("Catchability data"), #paste(Area,
+                                                                    fluidRow(
+                                                                      column(3,uiOutput("table.yearfilter")),
+                                                                      column(3,uiOutput("table.stockfilter"))
+                                                                    ),
+                                                                    fluidRow(
+                                                                      DT::dataTableOutput("Catchtable")
+                                                                      %>% withSpinner(color="#0dc5c1")
+                                                                    )
+                                                                  )),
+                                                         tabPanel("Catchability Plots",
+                                                                  fluidPage(
+                                                                    titlePanel("Catchability data"), #paste(Area,
+                                                                    fluidRow(
+                                                                      column(3,uiOutput("plot.countryfilter")),
+                                                                      column(3,uiOutput("plot.stockfilter"))
+                                                                    ),
+                                                                    mainPanel(
+                                                                      plotOutput("plotCatch", width = '800px', height = '800px')
+                                                                      %>% withSpinner(color="#0dc5c1")
+                                                                    )
+                                                                  )
+                                                         )
+                                             )
+                                    ),
+                               conditionalPanel("input.Toolselected == 'Partial F App'",
+                                             tabsetPanel(id="Partial F Panel", type="tabs",
+                                                         tabPanel("Fleet Partial F Tables",
+                                                                  fluidPage(
+                                                                    titlePanel("Partial F data"),#paste(Area,
+                                                                    fluidRow(
+                                                                      column(3,uiOutput("PF.year.table")),
+                                                                      column(3,uiOutput("PF.stock.table"))        
+                                                                    ),
+                                                                    fluidRow(
+                                                                      DT::dataTableOutput("PFtable")
+                                                                      %>% withSpinner(color="#0dc5c1")
+                                                                    )
+                                                                  )),
+                                                         tabPanel("Partial F time series",
+                                                                  fluidPage(
+                                                                    titlePanel("Partial F data"),#paste(Area,)
+                                                                    fluidRow(
+                                                                      column(3,uiOutput("PF.country.plot1")
+                                                                      ),
+                                                                      column(3,uiOutput("PF.stock.plot1")
+                                                                      )
+                                                                    ),
+                                                                    mainPanel(
+                                                                      plotOutput("plotCatch", width = '800px', height = '800px')
+                                                                      %>% withSpinner(color="#0dc5c1")
+                                                                    )
+                                                                  ) #end of FluidPage
+                                                         ),#end of tabPanel
+                                                         tabPanel("Partial F spider chart",
+                                                                  fluidPage(
+                                                                    titlePanel("Partial F data"), #paste(Area,)
+                                                                    fluidRow(
+                                                                      column(3,uiOutput("PF.year.plot2")
+                                                                      ),
+                                                                      column(3,uiOutput("PF.stock.plot2")
+                                                                      )
+                                                                    ),
+                                                                    mainPanel(
+                                                                      plotOutput("Spiderplot", width = '800px', height = '800px')
+                                                                      %>% withSpinner(color="#0dc5c1")
+                                                                    )
+                                                                  ) #end of FluidPage
+                                                         )#end of tabPanel
+                                             )#end of tabsetPanel
+                                    ), #end of Partial F conditionalPanel
+                        conditionalPanel("input.Toolselected == 'Quota share App'")
+                        ),
+               tabPanel(" Schenarios", value ="sc", icon = icon("line-chart"))
+                        ),
+  hr(),
+  fluidRow(width =12,
+           img(src="Logos/Niamh.png", width = "1250px", height = "100px", 
+               style="display: block; margin-left: auto; margin-right: auto;margin-top:0em")
+  )
+  )
 
 shinyApp(ui, server)
