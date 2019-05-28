@@ -701,7 +701,7 @@ output$tableE <- DT::renderDataTable(DT::datatable({
     data[,c("year","country","fleet","metier","stock","logq")]
   }))
   
-  output$plotCatch <- renderPlot({
+  output$plotCatch2 <- renderPlot({
     data <- catchability()
     if (input$country != "All") {
       data <- data[data$country %in% input$country,]
@@ -761,7 +761,7 @@ output$tableE <- DT::renderDataTable(DT::datatable({
     data[,c("year","country","fleet","metier","stock","partF")]
    }))
   
- output$plotCatch <- renderPlot({
+ output$plotPartialF <- renderPlot({
     data <- partF()
     data <- aggregate(list(partF=data$partF),list(year=data$year,stock=data$stock,
                                                   fleet=data$fleet, metier=data$metier,country=data$country),sum)
@@ -996,7 +996,7 @@ ui <- fluidPage(
                                                                       column(3,uiOutput("plot.stockfilter"))
                                                                     ),
                                                                     mainPanel(
-                                                                      plotOutput("plotCatch", width = '800px', height = '800px')
+                                                                      plotOutput("plotCatch2", width = '800px', height = '800px')
                                                                       %>% withSpinner(color="#0dc5c1")
                                                                     )
                                                                   )
@@ -1027,8 +1027,8 @@ ui <- fluidPage(
                                                                       )
                                                                     ),
                                                                     mainPanel(
-                                                                      plotOutput("plotCatch", width = '800px', height = '800px')
-                                                                      %>% withSpinner(color="#0dc5c1")
+                                                                      #plotOutput("plotPartialF", width = '800px', height = '800px')
+                                                                      #%>% withSpinner(color="#0dc5c1")
                                                                     )
                                                                   ) #end of FluidPage
                                                          ),#end of tabPanel
