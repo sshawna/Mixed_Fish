@@ -12,6 +12,7 @@ library(tidyverse)
 library(viridis)
 library(DT)
 library(dplyr)
+library(vmstools)
 options(scipen=999)
 
 data_fish <-  read.csv(file="data/Hackathon/Data.csv") 
@@ -137,7 +138,7 @@ server <- function(input, output, session) {
                 vjust=c(0.5,0.5,0,-1,0,0.5,1.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)
     
   }, height= 670)
-  ##################################### End of Hackathon ################################################ 
+
  
   
   
@@ -802,7 +803,42 @@ output$tableE <- DT::renderDataTable(DT::datatable({
                                              angle = 360/(2*pi)*rev( pi/2 + seq( pi/nstock, 2*pi-pi/nstock, len=nstock))
                  ))
     )
-   })            
+   })
+  
+############## Mapping ##########################
+  sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
+  stocks <- read.csv("H:\\TCM mapping\\maps\\stocks_SS.csv")
+  #stocks_list <- list('cod-7e-k','had-7b-k','hke-nrtn','meg-ivvi','meg-rock','mgw-78','whg-7b-k')
+  stocks_list <- levels(stocks$stock)
+  #create dropdown to select stock
+  updateSelectizeInput(session, 'Stockselector',
+                       choices = list(stocks_list),
+                       server = TRUE,
+                       selected =1)
+  
+  output$Stockareas <- renderImage({
+    filename <- normalizePath(file.path('maps/',
+                                        paste(input$Species_selector, '_stocks.png', sep='')))
+    # Return a list containing the filename
+    list(src = filename,
+         width = 690,
+         height = 545)
+  }, deleteFile = FALSE)
+  
+  output$Stockoverlap <- renderImage({
+    filename <- normalizePath(file.path('maps/',
+                                        paste(input$Stockselector, '.png', sep='') 
+    ))
+    # Return a list containing the filename
+    list(src = filename,
+         width = 470,
+         height = 350)
+  }, deleteFile = FALSE)
+  
+###end of server###  
+}
+
+  
 }
 
 ########################################## ui ##################################################
@@ -1041,6 +1077,21 @@ ui <- fluidPage(
                                              )#end of tabsetPanel
                                     ), #end of Partial F conditionalPanel
                         conditionalPanel("input.Toolselected == 'Quota share App'")
+                        ),
+               tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
+                        fluidRow(column(width=5, selectInput("Species_selector","Select Species", choices=c(sp)),
+                                        plotOutput('Stockareas')),
+                                 column(width=5,offset=1,
+                                        selectizeInput(inputId = "Stockselector", label="Select Stock",
+                                                       choices=NULL, multiple=FALSE),
+                                        plotOutput('Stockoverlap'))
+                        ),
+                        br(),
+                        br(),
+                        br(),
+                        br(),
+                        br(),
+                        br()
                         ),
                tabPanel(" Schenarios", value ="sc", icon = icon("line-chart"))
                         ),
