@@ -592,13 +592,13 @@ output$tableE <- DT::renderDataTable(DT::datatable({
 
  ###########Existing tools##########################
 ############## 3. Effort app #######################
- # partF <-reactive(
-   # if(input$Area_selector == "North_Sea") {
-   #   readRDS("data/existing_tools/5.partial_F_app/data/North_Sea/partF.RDS")
-   # }else if(input$Area_selector == "Celtic_Sea") {
-    #  readRDS("data/existing_tools/5.partial_F_app/data/Celtic_Sea/CSpartF.rds")
-   # }
-  #)
+  partF <- reactive(
+    if(input$Area_selector == "North_Sea") {
+      readRDS("data/existing_tools/5.partial_F_app/data/North_Sea/partF.rds")
+    }else if(input$Area_selector == "Celtic_Sea") {
+      readRDS("data/existing_tools/5.partial_F_app/data/Celtic_Sea/CSpartF.rds")
+    }
+  )
   output$fleet.yearfilter <- renderUI({
     selectInput("year","Year:",c("All",sort(unique(as.character(partF()$year)),decreasing=T))
     )
@@ -626,7 +626,7 @@ output$tableE <- DT::renderDataTable(DT::datatable({
     data
   })) 
   
-  output$plotCatch <- renderPlot({
+  output$plotEffTS <- renderPlot({
     dataplot1 <- partF()
     dataplot1$effmet <- dataplot1$effort*dataplot1$effshare
     if (input$country1 != "All") {
@@ -638,7 +638,7 @@ output$tableE <- DT::renderDataTable(DT::datatable({
             theme_bw())
   })                  
   
-  output$plotCatch_Fl <- renderPlot({
+  output$plotEff_Fl <- renderPlot({
     # aggregate across stocks (take mean)
     data <- partF()[,c("year","country", "fleet", "metier","effort","effshare")]
     data <- aggregate(list(effort =data$effort, effshare = data$effshare),list(year=data$year,country = data$country, 
@@ -701,7 +701,7 @@ output$tableE <- DT::renderDataTable(DT::datatable({
     data[,c("year","country","fleet","metier","stock","logq")]
   }))
   
-  output$plotCatch <- renderPlot({
+  output$plotCatchability <- renderPlot({
     data <- catchability()
     if (input$country != "All") {
       data <- data[data$country %in% input$country,]
@@ -718,15 +718,6 @@ output$tableE <- DT::renderDataTable(DT::datatable({
   })
   
   ################### 5. Partial F app #########################
-  partF <-readRDS("data/existing_tools/5.partial_F_app/data/Celtic_Sea/partF.RDS")
-  #partF <- reactive(
-    #if(input$Area_selector == "North_Sea") {
-     # readRDS("data/existing_tools/5.partial_F_app/data/North_Sea/partF.rds")
-   # }else if(input$Area_selector == "Celtic_Sea") {
-    #  readRDS("data/existing_tools/5.partial_F_app/data/Celtic_Sea/partF.rds")
-    #}
-  #)
-  
   output$PF.year.table <- renderUI({
     selectInput("year","Year:", c("All",sort(unique(as.character(partF()$year)),decreasing=T)))
   })
@@ -761,7 +752,7 @@ output$tableE <- DT::renderDataTable(DT::datatable({
     data[,c("year","country","fleet","metier","stock","partF")]
    }))
   
- output$plotCatch <- renderPlot({
+ output$plotPartialF <- renderPlot({
     data <- partF()
     data <- aggregate(list(partF=data$partF),list(year=data$year,stock=data$stock,
                                                   fleet=data$fleet, metier=data$metier,country=data$country),sum)
@@ -958,7 +949,7 @@ ui <- fluidPage(
                                                                       column(3,uiOutput("time.countryfilter")) 
                                                                     ),
                                                                     mainPanel(
-                                                                      plotOutput("plotCatch", width = '800px', height = '800px')
+                                                                      plotOutput("plotEffTS", width = '800px', height = '800px')
                                                                       %>% withSpinner(color="#0dc5c1")
                                                                     )
                                                                   ) #end of fluidPage
@@ -967,7 +958,7 @@ ui <- fluidPage(
                                                                   fluidPage(
                                                                     titlePanel(paste("Effort by fleet relative to first data year")), #paste(Area,"Effort by fleet relative to first data year")),
                                                                     mainPanel(
-                                                                      plotOutput("plotCatch_Fl", width = '800px', height = '800px')
+                                                                      plotOutput("plotEff_Fl", width = '800px', height = '800px')
                                                                      %>% withSpinner(color="#0dc5c1")
                                                                     )
                                                                   ) #end of FluidPage
@@ -996,7 +987,7 @@ ui <- fluidPage(
                                                                       column(3,uiOutput("plot.stockfilter"))
                                                                     ),
                                                                     mainPanel(
-                                                                      plotOutput("plotCatch", width = '800px', height = '800px')
+                                                                      plotOutput("plotCatchability", width = '800px', height = '800px')
                                                                       %>% withSpinner(color="#0dc5c1")
                                                                     )
                                                                   )
@@ -1027,7 +1018,7 @@ ui <- fluidPage(
                                                                       )
                                                                     ),
                                                                     mainPanel(
-                                                                      plotOutput("plotCatch", width = '800px', height = '800px')
+                                                                      plotOutput("plotPartialF", width = '800px', height = '800px')
                                                                       %>% withSpinner(color="#0dc5c1")
                                                                     )
                                                                   ) #end of FluidPage
