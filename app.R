@@ -17,7 +17,7 @@ library(reshape)
 library(shinyWidgets)
 library(googlesheets)
 library(reshape2)
-#library(vmstools)
+library(vmstools)
 options(scipen=999)
 
 data_fish <-  read.csv(file="data/Hackathon/Data.csv") 
@@ -1653,9 +1653,9 @@ observeEvent(input$info3, {
   
 ############## Mapping ##########################
   sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
-  #stocks <- read.csv("H:\\TCM mapping\\maps\\stocks_SS.csv")
-  stocks_list <- list('cod-7e-k','had-7b-k','hke-nrtn','meg-ivvi','meg-rock','mgw-78','whg-7b-k')
-  #stocks_list <- levels(stocks$stock)
+  stocks <- read.csv("H:\\TCM mapping\\maps\\stocks_SS.csv")
+  #stocks_list <- list('cod-7e-k','had-7b-k','hke-nrtn','meg-ivvi','meg-rock','mgw-78','whg-7b-k')
+  stocks_list <- levels(stocks$stock)
   #create dropdown to select stock
   updateSelectizeInput(session, 'Stockselector',
                        choices = list(stocks_list),
@@ -1683,7 +1683,7 @@ observeEvent(input$info3, {
   
   ###########Scenarios##########################
   
-  #####Advice 2018###
+  #####Advice 2019###
   output$table1 <- function() {
     text_tbl <- data.frame(
       Tiers = c("Tier1", "Tier2", "Tier3"),
