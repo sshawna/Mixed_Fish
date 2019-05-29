@@ -817,7 +817,7 @@ output$tableE <- DT::renderDataTable(DT::datatable({
                        selected =1)
   
   output$Stockareas <- renderImage({
-    filename <- normalizePath(file.path('maps/',
+    filename <- normalizePath(file.path('www/maps/',
                                         paste(input$Species_selector, '_stocks.png', sep='')))
     # Return a list containing the filename
     list(src = filename,
@@ -826,7 +826,7 @@ output$tableE <- DT::renderDataTable(DT::datatable({
   }, deleteFile = FALSE)
   
   output$Stockoverlap <- renderImage({
-    filename <- normalizePath(file.path('maps/',
+    filename <- normalizePath(file.path('www/maps/',
                                         paste(input$Stockselector, '.png', sep='') 
     ))
     # Return a list containing the filename
@@ -838,8 +838,6 @@ output$tableE <- DT::renderDataTable(DT::datatable({
 ###end of server###  
 }
 
-  
-}
 
 ########################################## ui ##################################################
 
