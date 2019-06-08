@@ -23,7 +23,7 @@ options(scipen=999)
 data_fish <-  read.csv(file="data/Hackathon/Data.csv") 
 CelticEcoSpecies <- read.csv("data/CaCS.csv")
 test <- aggregate(CelticEcoSpecies$Landings, by = list(CelticEcoSpecies$Country
-, CelticEcoSpecies$Year, CelticEcoSpecies$lvl4, CelticEcoSpecies$Species), FUN = "sum")
+                                                       , CelticEcoSpecies$Year, CelticEcoSpecies$lvl4, CelticEcoSpecies$Species), FUN = "sum")
 names(test) <- c("Country", "Year", "Metier", "Species", "Landings")
 testL2 <- as.data.frame(CelticEcoSpecies %>% group_by(Country, Year, lvl4, Species, Area)
                         %>% summarise(Weight_in_tonnes = sum(Landings), Value_in_Euros = sum(Value)))
@@ -37,21 +37,26 @@ names(priceL2) <- c("Year", "Metier", "Species", "Price_per_KG")
 CelticCE <- read.csv("data/EfCS.csv")
 CelticCE$Vessel_length <- factor(CelticCE$Vessel_length, levels = c("<10", "10<24", "24<40", ">=40", "all"))
 testE <- aggregate(CelticCE$kw_days,
-by = list(CelticCE$Country, CelticCE$Year, CelticCE$lvl4, CelticCE$Vessel_length), FUN = "sum")
+                   by = list(CelticCE$Country, CelticCE$Year, CelticCE$lvl4, CelticCE$Vessel_length), FUN = "sum")
 names(testE) <- c("Country", "Year", "Metier", "Vessel_length", "KW_Day")
 testE2 <- aggregate(CelticCE$kw_days, by = list(CelticCE$Country, 
-CelticCE$Year, CelticCE$lvl4, CelticCE$Vessel_length, CelticCE$Area), FUN = "sum")
+                                                CelticCE$Year, CelticCE$lvl4, CelticCE$Vessel_length, CelticCE$Area), FUN = "sum")
 names(testE2) <- c("Country", "Year", "Metier", "Vessel_length", "Area", "KW_Day")
 projectionsAllyears <- read.csv("data/Repr_Advice/projectionsAllyears.csv") 
 levels(projectionsAllyears$Stock) <- c("COD_CS", "HAD_CS", "MON_CS", "N_HKE", "N_MEG", "SOL_7E", "SOL_7FG", "WHG_CS")
 dataForstock <- projectionsAllyears%>% filter(year != 2019, year != 2020)
 BRPs <- read_csv("data/BRPs.csv") 
-shareW <- read.csv("data/FCube/shareW.csv")
+shareW <- read.csv("data/FCube/share1.csv")
 effbystL <- read.csv("data/FCube/effbystL.csv")
 effbyScen <- read.csv("data/FCube/effbyScenarioW.csv")
 effbyScenL <- read.csv("data/FCube/effbyScenario.csv")
+effbymet<-read.csv("data/FCube/effortbymetier.csv")
+chocked<-read.csv("data/FCube/ChockedS.csv")
+#AllCatch<-read.csv("data/FCube/AllCatchDataframe.csv")
+#CatchEffortbyScenario<-read.csv("data/FCube/ResultsCatchEffortbyScenario.csv")
 FCubepage3 <- read.csv("data/FCube/FCubePage.csv")
 FCubepage3Radar <- dcast(FCubepage3, sc + year + value ~ stock, value.var = "RelativeToSS")
+sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
 
 
 
@@ -1993,131 +1998,70 @@ observeEvent(input$info3, {
       row_spec(c(2, 4, 6, 8, 10), background = "lightgrey")
   }
   
-  
   ##page2##
+  
   radarP <- reactive({
-    filter(shareW, stock == input$FCShare)
+    filter(shareW,country==input$filltype, stock == input$FCShare)
   })
   
   output$radrarS <-
     renderPlotly({
-      if (input$filltype == "No") {
-        plot_ly(
-          type = "scatterpolar",
-          mode = "lines+markers",
-          # fill = 'toself'
-          fill = "tozeroy"
-        ) %>%
-          add_trace(
-            r = radarP()$BE,
-            theta = radarP()$scenario,
-            name = "BE", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$EN,
-            theta = radarP()$scenario,
-            name = "EN", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$FR,
-            theta = radarP()$scenario,
-            name = "FR", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$IE,
-            theta = radarP()$scenario,
-            name = "IE", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$OT,
-            theta = radarP()$scenario,
-            name = "OT", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$SP,
-            theta = radarP()$scenario,
-            name = "SP", marker = list(size = 12), lines = list(color = "black")
-          )
-      }
-      else if (input$filltype == "Yes") {
-        plot_ly(
-          type = "scatterpolar",
-          mode = "lines+markers",
-          fill = "toself"
-          # fill="tozeroy"
-        ) %>%
-          add_trace(
-            r = radarP()$BE,
-            theta = radarP()$scenario,
-            name = "BE", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$EN,
-            theta = radarP()$scenario,
-            name = "EN", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$FR,
-            theta = radarP()$scenario,
-            name = "FR", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$IE,
-            theta = radarP()$scenario,
-            name = "IE", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$OT,
-            theta = radarP()$scenario,
-            name = "OT", marker = list(size = 12), lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = radarP()$SP,
-            theta = radarP()$scenario,
-            name = "SP", marker = list(size = 12), lines = list(color = "black")
-          )
-      }
+      plot_ly(
+        type = "scatterpolar",
+        # mode = "lines+markers",
+        r= filter(radarP(),scenario!="baseline")$share,
+        theta = levels(shareW$scenario)[-1],
+        fill = "toself",
+        name=paste(input$filltype,":2019"),marker = list(size = 11)
+      )%>%
+        add_trace(r= filter(radarP(),scenario=="baseline")$share,
+                  theta = levels(shareW$scenario)[-1],
+                  fill="tozeroy",
+                  name = paste(input$filltype,":2017"),
+                  marker = list(size = 12, color = "red"))%>%layout(showlegend=T) 
+      
     })
   
   output$shareWtable <- function() {
     text_tbl <- radarP()[-c(1, 2)]
-    names(text_tbl) <- c("Scenario", "Belgium", "England", "France", "Ireland", "Others", "Spain")
+    names(text_tbl) <- c("Stock", "Country", "Scenario", "Share")
     text_tbl %>%
-      knitr::kable("html", digits = 3) %>%
+      knitr::kable("html") %>%
       kable_styling(full_width = F, font_size = 16) %>%
-      column_spec(c(1:7), bold = T, border_right = T, underline = T) %>%
+      #column_spec(c(1:7), bold = T, border_right = T, underline = T) %>%
       row_spec(c(1, 3, 5, 7), background = "lightyellow", color = "#525252") %>%
-      row_spec(c(2, 4, 6), background = "lightgrey")
+      row_spec(c(2, 4, 6,8), background = "lightgrey")
   }
   
   ######### Plot effort fleet by scenario######
   
   
   efbyscenario <- reactive({
-    filter(effbyScenL, fleet == input$FCEscen & scenario == input$fillScenario)
+    filter(effbymet, fleet == input$FCEscen)# & scenario == input$fillScenario)
   })
   
   output$plotFleetScenario <-
     renderPlotly({
-      plot_ly(efbyscenario()) %>%
+      p<-plot_ly(efbyscenario()) %>%
         add_trace(
-          x = ~scenario, y = ~effort, color = ~Country, type = "bar", hoverinfo = "text",
-          text = ~ paste(paste("Effort:", effort), Country, sep = "<br />"), colors = c("yellow", "red", "blue", "green", "orange", "purple", "grey")
-        ) %>%
-        layout(showticklabels = TRUE, showlegend = T)
+          x = ~scenario, y = ~efmet, color = ~metier, type = "bar", hoverinfo = "text",
+          text = ~ paste(paste("Effort:", efmet),paste("Share:",effshare), metier, sep = "<br />")
+        )%>%
+        layout(showticklabels = TRUE, showlegend = T,barmode="stack", yaxis = list(title = "Effort ('000 kwdays)"))
+      p
     })
   
   
   
   
   
-  output$EscenWtable <- function() {
-    text_tbl <- efbyscenario()[c(2, 3, 6)]
-    #  names(text_tbl)<-c('Scenario','Belgium','England','France','Ireland','Others','Spain')
-    text_tbl %>%
-      knitr::kable("html", digits = 3) %>%
-      kable_styling(full_width = F, font_size = 16)
-  }
+  # output$EscenWtable <- function() {
+  # text_tbl <- efbyscenario()[-c(1, 2, 8,9)]
+  #  names(text_tbl)<-c('Scenario','Belgium','England','France','Ireland','Others','Spain')
+  #text_tbl %>%
+  #  knitr::kable("html") %>%
+  #  kable_styling(full_width = F, font_size = 16)
+  # }
   
   
   
@@ -2126,24 +2070,34 @@ observeEvent(input$info3, {
   ############### Fleet by Stock###########################
   
   effbys <- reactive({
-    filter(effbystL, Fleet == input$FCEfS)
+    filter(effbystL, fleet == input$FCEfS)
   })
   output$plotFleetbyStock <-
     renderPlotly({
       plot_ly(effbys()) %>%
         add_trace(
-          x = ~Stock, y = ~Effort, color = ~Country, type = "scatter",
+          x = ~stock, y = ~effort, color = ~Country, type = "scatter",
           mode = "lines+markers", line = list(width = 2), hoverinfo = "text",
-          text = ~ paste(paste("Effort:", Effort), Country, sep = "<br />"), colors = c("yellow", "red", "blue", "green", "orange", "purple")
+          text = ~ paste(paste("Effort:", effort), Country, sep = "<br />"), colors = c("yellow", "red", "blue", "green", "orange", "purple")
         ) %>%
-        layout(showticklabels = TRUE, hovermode = "compare", showlegend = T)
+        layout(showticklabels = TRUE, hovermode = "compare", showlegend = T, yaxis = list(title = "Effort ('000 kwdays)"))
     })
   
+  tabeffbys <- reactive({
+    filter(chocked, Country == input$FCEfS)
+  })
+  output$fleetbystock <- function() {
+    text_tbl <-  tabeffbys()[-c(1,7)]
+    names(text_tbl)<-c('Fleet','Max','Unchoke','Min','Choke')
+    text_tbl %>%
+      knitr::kable("html") %>%
+      kable_styling(full_width = F, font_size = 16)
+  }
+  
+  ####page3
   
   
-  
-  
-  ##page3##
+  #
   output$FCubeCircularplot1 <- renderPlot({
     t1 <- filter(FCubepage3, value == "landings")
     t1$RelativeToSS <- round(t1$RelativeToSS, 3)
@@ -2181,7 +2135,7 @@ observeEvent(input$info3, {
     # Make the plot
     p <- ggplot(t1, aes(x = as.factor(id), y = RelativeToSS, fill = sc)) + # Note that id is a factor. If x is numeric, there is some space between the first bar
       
-      geom_bar(aes(x = as.factor(id), y = RelativeToSS, fill = sc), stat = "identity", alpha = 0.5) +
+      geom_bar(aes(x = as.factor(id), y = RelativeToSS, fill = sc), stat = "identity", alpha = 0.5) +ggtitle("Prediction Relative to the Single Species Advice")+
       
       # Add a val=100/75/50/25 lines. I do it at the beginning to make sur barplots are OVER it.
       geom_segment(data = grid_data, aes(x = end, y = 0, xend = start, yend = 0), colour = "grey", alpha = 1, size = 0.3, inherit.aes = FALSE) +
@@ -2230,67 +2184,90 @@ observeEvent(input$info3, {
       plot_ly(
         type = "scatterpolar",
         # mode = 'lines',
-        fill = "toself"
-        # fill="tozeroy"
+        # fill = "toself"
+        fill="tozeroy"
       ) %>%
         add_trace(
           r = c(1, 1, 1, 1, 1, 1, 1, 1),
           theta = c(levels(t3$sc), levels(t3$sc)[1]),
           # fill="tozeroy",
+          fill = "toself",
           name = "Ratio=1",
           lines = list(color = "red"),
-          marker = list(size = 12, color = "red")
+          marker = list(size = 14, color = "red",symbol=4)
         ) %>%
         add_trace(
           r = t3$`COD-CS`,
           theta = t3$sc,
-          name = "COD-CS", marker = list(size = 12), lines = list(color = "black")
+          name = "COD-CS", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t3$`HAD-CS`,
           theta = t3$sc,
-          name = "HAD-CS", marker = list(size = 12), lines = list(color = "black")
+          name = "HAD-CS", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t3$`MON-CS`,
           theta = t3$sc,
-          name = "MON-CS", marker = list(size = 12), lines = list(color = "black")
+          name = "MON-CS", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t3$`N-HKE`,
           theta = t3$sc,
-          name = "N-HKE", marker = list(size = 12), lines = list(color = "black")
+          name = "N-HKE", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t3$`N-MEG`,
           theta = t3$sc,
-          name = "N-MEG", marker = list(size = 12), lines = list(color = "black")
+          name = "N-MEG", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t3$`SOL-7E`,
           theta = t3$sc,
-          name = "sol-7E", marker = list(size = 12), lines = list(color = "black")
+          name = "sol-7E", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t3$`SOL-7FG`,
           theta = t3$sc,
-          name = "SOL-7FG", marker = list(size = 12), lines = list(color = "black")
+          name = "SOL-7FG", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t3$`WHG-CS`,
           theta = t3$sc,
-          name = "WHG-CS", marker = list(size = 12), lines = list(color = "black")
-        )
+          name = "WHG-CS", marker = list(size = 12)#, lines = list(color = "black")
+        ) %>%
+        layout(hovermode = "compare")
     })
   
-  
+  output$FCubeOvershootrplot1<-renderPlotly({
+    t31 <- filter(FCubepage3, value == "landings",sc==input$FCOver1)
+    t31 %>%plot_ly(x = ~stock, y = ~Diff, color = ~Decision ,hoverinfo = "text",
+                   text = ~ paste(paste("Advice:",SSAdvice),paste( "Predicted:",data),paste(Decision,":",abs(Diff)), sep = "<br />")) %>%
+      layout(showticklabels = TRUE, showlegend = T,   yaxis = list(title = ""))
+  })
   
   output$FCubepage31 <- renderUI({
     if (input$PlottypeFpage == 2) {
-      plotlyOutput("FCubeRadarplot1", width = 800, height = 700)
+      list(h4("Prediction Relative to the Single Species Advice.",
+              style = "font-weight:bold;color:orange;text-decoration: underline;"
+      ),
+      plotlyOutput("FCubeRadarplot1"),br(),
+      h4("Stock overshoot and undershoot by scenarios.",
+         style = "font-weight:bold;color:orange;text-decoration: underline;"
+      ),
+      div(
+        style = "border-radius: 25px,width:120px;color:orange",
+        selectInput("FCOver1",
+                    label = "Select Scenario", choices = levels(FCubepage3$sc),
+                    selectize = T
+        )),plotlyOutput("FCubeOvershootrplot1"))
     }
-    else {
-      plotOutput("FCubeCircularplot1", width = 800, height = 700)
+    else {list(
+      
+      h4("Prediction Relative to the Single Species Advice.",
+         style = "font-weight:bold;color:orange;text-decoration: underline;"
+      ),
+      plotOutput("FCubeCircularplot1", width = 800, height = 700))
     }
   })
   
@@ -2382,65 +2359,90 @@ observeEvent(input$info3, {
       plot_ly(
         type = "scatterpolar",
         # mode = 'lines',
-        fill = "toself"
-        # fill="tozeroy"
+        #fill = "toself"
+        fill="tozeroy"
       ) %>%
         add_trace(
           r = c(1, 1, 1, 1, 1, 1, 1, 1),
           theta = c(levels(t4$sc), levels(t4$sc)[1]),
           # fill="tozeroy",
+          fill = "toself",
           name = "Ratio=1",
           lines = list(color = "red"),
-          marker = list(size = 12, color = "red")
+          marker = list(size = 14, color = "red",symbol=4)
         ) %>%
         add_trace(
           r = t4$`COD-CS`,
           theta = t4$sc,
-          name = "COD-CS", marker = list(size = 12), lines = list(color = "black")
+          name = "COD-CS", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t4$`HAD-CS`,
           theta = t4$sc,
-          name = "HAD-CS", marker = list(size = 12), lines = list(color = "black")
+          name = "HAD-CS", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t4$`MON-CS`,
           theta = t4$sc,
-          name = "MON-CS", marker = list(size = 12), lines = list(color = "black")
+          name = "MON-CS", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t4$`N-HKE`,
           theta = t4$sc,
-          name = "N-HKE", marker = list(size = 12), lines = list(color = "black")
+          name = "N-HKE", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t4$`N-MEG`,
           theta = t4$sc,
-          name = "N-MEG", marker = list(size = 12), lines = list(color = "black")
+          name = "N-MEG", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t4$`SOL-7E`,
           theta = t4$sc,
-          name = "sol-7E", marker = list(size = 12), lines = list(color = "black")
+          name = "sol-7E", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t4$`SOL-7FG`,
           theta = t4$sc,
-          name = "SOL-7FG", marker = list(size = 12), lines = list(color = "black")
+          name = "SOL-7FG", marker = list(size = 12)#, lines = list(color = "black")
         ) %>%
         add_trace(
           r = t4$`WHG-CS`,
           theta = t4$sc,
-          name = "WHG-CS", marker = list(size = 12), lines = list(color = "black")
+          name = "WHG-CS", marker = list(size = 12)#, lines = list(color = "black")
         )
     })
   
+  output$FCubeOvershootrplot2<-renderPlotly({
+    t31 <- filter(FCubepage3, value == "Fbar",sc==input$FCOver2)
+    t31 %>%plot_ly(x = ~stock, y = ~Diff, color = ~Decision ,hoverinfo = "text",
+                   text = ~ paste(paste("Advice:",SSAdvice),paste( "Predicted:",data),paste(Decision,":",abs(Diff)), sep = "<br />")) %>%
+      layout(showticklabels = TRUE, showlegend = T,   yaxis = list(title = ""))})
+  
   output$FCubepage32 <- renderUI({
-    if (input$PlottypeFpage == 2) {
-      plotlyOutput("FCubeRadarplot2", width = 800, height = 700)
+    if (input$PlottypeFpage == 2) {list(
+      
+      h4("Prediction Relative to the Single Species Advice.",
+         style = "font-weight:bold;color:orange;text-decoration: underline;"
+      ),
+      plotlyOutput("FCubeRadarplot2"),br(),
+      h4("Stock overshoot and undershoot by scenarios.",
+         style = "font-weight:bold;color:orange;text-decoration: underline;"
+      ),
+      div(
+        style = "border-radius: 25px,width:120px;color:orange",
+        selectInput("FCOver2",
+                    label = "Select Scenario", choices = levels(FCubepage3$sc),
+                    selectize = T
+        )),plotlyOutput("FCubeOvershootrplot2"))
     }
     else {
-      plotOutput("FCubeCircularplot2", width = 800, height = 700)
+      list(
+        
+        h4("Prediction Relative to the Single Species Advice.",
+           style = "font-weight:bold;color:orange;text-decoration: underline;"
+        ),
+        plotOutput("FCubeCircularplot2", width = 800, height = 700))
     }
   })
   
@@ -2535,56 +2537,57 @@ observeEvent(input$info3, {
         plot_ly(
           type = "scatterpolar",
           # mode = 'lines',
-          fill = "toself"
-          # fill="tozeroy"
+          #fill = "toself"
+          fill="tozeroy"
         ) %>%
           add_trace(
             r = c(1, 1, 1, 1, 1, 1, 1, 1),
             theta = c(levels(t4$sc), levels(t4$sc)[1]),
             # fill="tozeroy",
+            fill = "toself",
             name = "Ratio=1",
             lines = list(color = "red"),
-            marker = list(size = 12, color = "red")
+            marker = list(size = 14, color = "red",symbol=4)
           ) %>%
           add_trace(
             r = t5$`COD-CS`,
             theta = t5$sc,
-            name = "COD-CS", marker = list(size = 12), lines = list(color = "black")
+            name = "COD-CS", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`HAD-CS`,
             theta = t5$sc,
-            name = "HAD-CS", marker = list(size = 12), lines = list(color = "black")
+            name = "HAD-CS", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`MON-CS`,
             theta = t5$sc,
-            name = "MON-CS", marker = list(size = 12), lines = list(color = "black")
+            name = "MON-CS", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`N-HKE`,
             theta = t5$sc,
-            name = "N-HKE", marker = list(size = 12), lines = list(color = "black")
+            name = "N-HKE", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`N-MEG`,
             theta = t5$sc,
-            name = "N-MEG", marker = list(size = 12), lines = list(color = "black")
+            name = "N-MEG", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`SOL-7E`,
             theta = t5$sc,
-            name = "sol-7E", marker = list(size = 12), lines = list(color = "black")
+            name = "sol-7E", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`SOL-7FG`,
             theta = t5$sc,
-            name = "SOL-7FG", marker = list(size = 12), lines = list(color = "black")
+            name = "SOL-7FG", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`WHG-CS`,
             theta = t5$sc,
-            name = "WHG-CS", marker = list(size = 12), lines = list(color = "black")
+            name = "WHG-CS", marker = list(size = 12)#, lines = list(color = "black")
           )
       }
       else if (input$SSEyear == 2020) {
@@ -2592,67 +2595,99 @@ observeEvent(input$info3, {
         plot_ly(
           type = "scatterpolar",
           # mode = 'lines',
-          fill = "toself"
-          # fill="tozeroy"
+          #fill = "toself"
+          fill="tozeroy"
         ) %>%
           add_trace(
             r = c(1, 1, 1, 1, 1, 1, 1, 1),
             theta = c(levels(t4$sc), levels(t4$sc)[1]),
             # fill="tozeroy",
+            fill = "toself",
             name = "Ratio=1",
             lines = list(color = "red"),
-            marker = list(size = 12, color = "red")
+            marker = list(size = 14, color = "red",symbol=4)
           ) %>%
           add_trace(
             r = t5$`COD-CS`,
             theta = t5$sc,
-            name = "COD-CS", marker = list(size = 12), lines = list(color = "black")
+            name = "COD-CS", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`HAD-CS`,
             theta = t5$sc,
-            name = "HAD-CS", marker = list(size = 12), lines = list(color = "black")
+            name = "HAD-CS", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`MON-CS`,
             theta = t5$sc,
-            name = "MON-CS", marker = list(size = 12), lines = list(color = "black")
+            name = "MON-CS", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`N-HKE`,
             theta = t5$sc,
-            name = "N-HKE", marker = list(size = 12), lines = list(color = "black")
+            name = "N-HKE", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`N-MEG`,
             theta = t5$sc,
-            name = "N-MEG", marker = list(size = 12), lines = list(color = "black")
+            name = "N-MEG", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`SOL-7E`,
             theta = t5$sc,
-            name = "sol-7E", marker = list(size = 12), lines = list(color = "black")
+            name = "sol-7E", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`SOL-7FG`,
             theta = t5$sc,
-            name = "SOL-7FG", marker = list(size = 12), lines = list(color = "black")
+            name = "SOL-7FG", marker = list(size = 12)#, lines = list(color = "black")
           ) %>%
           add_trace(
             r = t5$`WHG-CS`,
             theta = t5$sc,
-            name = "WHG-CS", marker = list(size = 12), lines = list(color = "black")
+            name = "WHG-CS", marker = list(size = 12)#, lines = list(color = "black")
           )
       }
     })
   
+  output$FCubeOvershootrplot3<-renderPlotly({
+    if (input$SSEyear == 2019) {
+      t31 <- filter(FCubepage3, value == "ssb",year==2019,sc==input$FCOver3)
+      t31 %>%plot_ly(x = ~stock, y = ~Diff, color = ~Decision ,hoverinfo = "text",
+                     text = ~ paste(paste("Advice:",SSAdvice),paste( "Predicted:",data),paste(Decision,":",abs(Diff)), sep = "<br />")) %>%
+        layout(showticklabels = TRUE, showlegend = T,   yaxis = list(title = ""))}
+    else if (input$SSEyear == 2020) {
+      t31 <- filter(FCubepage3, value == "ssb",year==2020,sc==input$FCOver3)
+      t31 %>%plot_ly(x = ~stock, y = ~Diff, color = ~Decision ,hoverinfo = "text",
+                     text = ~ paste(paste("Advice:",SSAdvice),paste( "Predicted:",data),paste(Decision,":",abs(Diff)), sep = "<br />")) %>%
+        layout(showticklabels = TRUE, showlegend = T,   yaxis = list(title = ""))}
+    
+    
+  })
+  
   
   output$FCubepage33 <- renderUI({
-    if (input$PlottypeFpage == 2) {
-      plotlyOutput("FCubeRadarplot3", width = 800, height = 700)
+    
+    if (input$PlottypeFpage == 2) {list(
+      
+      h4("Prediction Relative to the Single Species Advice.",
+         style = "font-weight:bold;color:orange;text-decoration: underline;"
+      ),
+      plotlyOutput("FCubeRadarplot3"),br(),
+      h4("Stock overshoot and undershoot by scenarios.",
+         style = "font-weight:bold;color:orange;text-decoration: underline;"
+      ),
+      div(
+        style = "border-radius: 25px,width:120px;color:orange",
+        selectInput("FCOver3",
+                    label = "Select Scenario", choices = levels(FCubepage3$sc),
+                    selectize = T
+        )),plotlyOutput("FCubeOvershootrplot3"))
     }
-    else {
-      plotOutput("FCubeCircularplot3", width = 800, height = 700)
+    else {list(h4("Prediction Relative to the Single Species Advice.",
+                  style = "font-weight:bold;color:orange;text-decoration: underline;"
+    ),
+    plotOutput("FCubeCircularplot3", width = 800, height = 700))
     }
   })
   
@@ -3097,8 +3132,8 @@ tabPanel("Scenarios: Celtic Sea",
                       tabPanel(
                         "Page 2", fluidRow(
                           column(6, prettyRadioButtons("EfFilter",
-                                                       label = h3("Effort"), thick = T, animation = "pulse",
-                                                       choices = list("SHARE BY SCENARIO" = 1, "FLEET BY SCENARIO" = 2, "FLEET BY STOCK" = 3),
+                                                       label = h3(""), thick = T, animation = "pulse",
+                                                       choices = list("RELATIVE SHARE OF SPECIES’ LANDINGS" = 1, "FLEET BY SCENARIO" = 2, "FLEET BY STOCK" = 3),
                                                        selected = 1, inline = T
                           )),
                           column(
@@ -3117,7 +3152,7 @@ tabPanel("Scenarios: Celtic Sea",
                               div(
                                 style = "border-radius: 25px,width:120px;color:orange",
                                 selectInput("FCEscen",
-                                            label = "Select Fleet", choices = levels(effbyScenL$fleet),
+                                            label = "Select Fleet", choices = levels(effbymet$fleet),
                                             selectize = T
                                 )
                               )
@@ -3126,7 +3161,7 @@ tabPanel("Scenarios: Celtic Sea",
                               condition = "input.EfFilter == 3",
                               div(
                                 style = "border-radius: 25px,width:120px;color:orange",
-                                selectInput("FCEfS", label = "Select Fleet", levels(effbystL$Fleet), selectize = T)
+                                selectInput("FCEfS", label = "Select Fleet", levels(effbystL$fleet), selectize = T)
                               )
                             )
                           ),
@@ -3135,46 +3170,44 @@ tabPanel("Scenarios: Celtic Sea",
                               condition = "input.EfFilter == 1",
                               div(
                                 style = "border-radius: 25px,width:120px;color:orange",
-                                selectInput("filltype", label = "Fill by Color", choices = c("Yes", "No"), selectize = T)
+                                selectInput("filltype", label = "Select Country", choices = c("BE", "EN","FR","IE","OT","SP"), selectize = T)
                               )
                             ),
                             conditionalPanel(
-                              condition = "input.EfFilter == 2",
-                              div(
-                                style = "border-radius: 25px,width:120px;color:orange",
-                                selectInput("fillScenario", label = "Select Scenario", choices = levels(effbyScenL$scenario), selectize = T)
-                              )
-                            ),
+                              condition = "input.EfFilter == 2")
+                            ,
                             conditionalPanel(condition = "input.EfFilter == 3")
                           )
                         ),
                         fluidRow(
                           conditionalPanel(
                             condition = "input.EfFilter == 1",
-                            column(width = 5, h5("Stock Effort Share by Scenario", style = "margin-bottom=125px;text-align:center;
-                                                 font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("radrarS")), column(width = 4, tableOutput("shareWtable"))
+                            column(width = 5, h5("Relative share of species' landings by country in 2019 scenarios compared to the 2017 (baseline)", style = "margin-bottom=125px;text-align:center;
+                                                 font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("radrarS")), column(width = 6, tableOutput("shareWtable"))
                             ),
                           conditionalPanel(
                             condition = "input.EfFilter == 2",
-                            column(width = 5, h5("Catch Effort by Scenario", style = "margin-bottom=125px;text-align:center;
-                                                 font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("plotFleetScenario")),
-                            column(width = 4, tableOutput("EscenWtable"))
+                            column(width = 12, h5("Effort by fleet and metier  for 2017(baseline) and estimates for various scenarios in 2019.", style = "margin-bottom=125px;text-align:center;
+                                                  font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("plotFleetScenario", height = 600))
+                            #,
+                            #column(width = 4, tableOutput("EscenWtable"))
                             ),
-                          conditionalPanel(condition = "input.EfFilter == 3", column(width = 10, h5("Fleet Effort by Stock", style = "margin-bottom=125px;text-align:center;
-                                                                                                    font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("plotFleetbyStock")))
+                          conditionalPanel(condition = "input.EfFilter == 3", column(width = 7, h5("Estimates of Effort by fleet corresponding to the individual quota share by fish stock in 2019", style = "margin-bottom=125px;text-align:center;
+                                                                                                   font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("plotFleetbyStock", height = 600)),
+                                           column(width = 5,  div(style = " border-radius: 5px;background-color:grey ;",
+                                                                  tableOutput("fleetbystock")))
                           )
-                          ),
-                      tabPanel("Page 3", fluidRow(
+                      )),   tabPanel("Page 3", fluidRow(
                         column(
                           3, prettyRadioButtons("FCubeFilter",
-                                                label = h4("Ratio"), thick = T, animation = "pulse",
+                                                label = "", thick = T, animation = "pulse",
                                                 choices = list("LANDINGS" = 1, "FBAR" = 2, "SSB" = 3),
                                                 selected = 1, inline = F
                           ),
                           div(
                             style = "border-radius: 25px,width:120px;color:orange",
                             selectInput("PlottypeFpage",
-                                        label = "Select Plot", choices = c("Circular Barchart" = 1, "Radar" = 2),
+                                        label = "Select Plot", choices = c("Radar" = 2, "Circular Barchart" = 1),
                                         selectize = T
                             )
                           ),
@@ -3192,9 +3225,7 @@ tabPanel("Scenarios: Celtic Sea",
                           )
                         ),
                         column(
-                          9, h3("Prediction Relative to the Single Species Advice.",
-                                style = "margin-bottom=125px;text-align:center;font-weight:bold;color:orange;text-decoration: underline;"
-                          ),
+                          9,
                           conditionalPanel(condition = "input.FCubeFilter == 1", uiOutput("FCubepage31")) # plotOutput("FCubeCircularplot1",width = 800 , height = 700))
                           ,
                           conditionalPanel(condition = "input.FCubeFilter == 2", uiOutput("FCubepage32")) # plotOutput("FCubeCircularplot2",width = 800 , height = 700))
@@ -3202,6 +3233,7 @@ tabPanel("Scenarios: Celtic Sea",
                           conditionalPanel(condition = "input.FCubeFilter == 3", uiOutput("FCubepage33")) # plotOutput("FCubeCircularplot3",width = 800 , height = 700))
                         )
                       ))
+                   
                       )
 )
 )
