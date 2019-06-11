@@ -65,7 +65,7 @@ sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfis
 
 server <- function(input, output, session) {
   
-###########Introduction##########################
+  ###########Introduction##########################
   observeEvent(input$FishGear, {
     output$I_selections <- renderUI({
       if (input$FishGear == "Who is Fishing") {
@@ -328,7 +328,7 @@ server <- function(input, output, session) {
     })
   
   
-################Hackathon  Work#################################
+  ################Hackathon  Work#################################
   output$plot <- renderPlot({
     # Transform data in a tidy format (long format)
     TotalWhiting=sum(data_fish$Whiting, na.rm=TRUE)
@@ -437,12 +437,12 @@ server <- function(input, output, session) {
                 vjust=c(0.5,0.5,0,-1,0,0.5,1.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)
     
   }, height= 670)
-
- 
+  
+  
   
   
   #########About botton#######
-   observeEvent(input$about, {
+  observeEvent(input$about, {
     shinyalert(
       title = "Mixed Fisheries",
       text = "Vizualization Tool for Mixed Fisheries Landings and Effort in Celtic Seas Ecoregion. 
@@ -460,10 +460,10 @@ server <- function(input, output, session) {
       animation = TRUE
     )
   })
-
   
-###########Landings##########################
-###############Page1#########################
+  
+  ###########Landings##########################
+  ###############Page1#########################
   observeEvent(input$info1, {
     shinyalert(text = "Vizualization of Landings Proportion in Celtic Seas Ecoregion. 
                <br> The filter elements on the plot  will be animated upon mouse over. By clicking the mouse accociated Landings proportion will be summarized in KGs for <b>Metier</b> and <b>Species</b> by <b>years</b> .",
@@ -480,7 +480,7 @@ server <- function(input, output, session) {
                animation = TRUE
     )
   })  
-
+  
   observeEvent(input$name, {
     output$L_selections <- renderUI({
       if (input$Country == "BEL" & input$name == 1) {
@@ -684,10 +684,10 @@ server <- function(input, output, session) {
       }
     }
   })
-
-
-###############Page2#########################
-observeEvent(input$info2, {
+  
+  
+  ###############Page2#########################
+  observeEvent(input$info2, {
     shinyalert(text = "Vizualization of Total Landings (KGs) in Celtic Seas Ecoregion. 
                <br> On the left hand side  is the total landings of species based on the selected <b>Metier</b> and <b>Year</b>.
                <br> On the right hand side  is the total landings of metier based on the selected <b>Species</b> and <b>Year</b>.
@@ -993,7 +993,7 @@ observeEvent(input$info2, {
     }
   })
   
-###############Page3#########################
+  ###############Page3#########################
   output$tableL <- DT::renderDataTable(DT::datatable({
     L <- CelticEcoSpecies
     if (input$LCountry != "All") {
@@ -1015,11 +1015,11 @@ observeEvent(input$info2, {
   }))
   
   
-
   
-##########Efforts##############
-###############Page1#################
-observeEvent(input$info3, {
+  
+  ##########Efforts##############
+  ###############Page1#################
+  observeEvent(input$info3, {
     shinyalert(text = "Vizualization of Effort Proportion in Celtic Seas Ecoregion. 
                <br> The filter elements on the plot  will be animated upon mouse over. By clicking the mouse accociated Effort proportion will be summarized in KW_days for <b>Metier</b> and <b>Vessel Length</b> by <b>years</b> .",
                closeOnEsc = TRUE,
@@ -1257,9 +1257,9 @@ observeEvent(input$info3, {
     }
   })
   
-
-###############Page2#################
- observeEvent(input$info4, {
+  
+  ###############Page2#################
+  observeEvent(input$info4, {
     shinyalert(text = "Vizualization of Total Effort ( KW_days) in Celtic Seas Ecoregion. 
                <br> On the left hand side  is the total effort of different vessel length  based on the selected <b>Metier</b> and <b>Year</b>.
                <br> On the right hand side  is the total effort of metier based on the selected <b>Vessel Length</b> and <b>Year</b>.
@@ -1420,8 +1420,8 @@ observeEvent(input$info3, {
     }
   })
   
-
-###############Page3#################
+  
+  ###############Page3#################
   output$tableE <- DT::renderDataTable(DT::datatable({
     E <- CelticCE
     if (input$ECountry != "All") {
@@ -1442,8 +1442,8 @@ observeEvent(input$info3, {
     E
   }))
   
- ###########Existing tools##########################
-############## 3. Effort app #######################
+  ###########Existing tools##########################
+  ############## 3. Effort app #######################
   partF <- reactive(
     if(input$Area_selector == "North_Sea") {
       readRDS("data/existing_tools/5.partial_F_app/data/North_Sea/partF.rds")
@@ -1464,7 +1464,7 @@ observeEvent(input$info3, {
     )})
   
   output$efftable <- DT::renderDataTable(DT::datatable({
-     #aggregate across stocks (take mean)
+    #aggregate across stocks (take mean)
     data <- reactive(partF()[,c("year","country", "fleet", "metier","effort","effshare")])
     data <- aggregate(list(effort =data()$effort, effshare = data()$effshare),
                       list(year=data()$year,country = data()$country, fleet=data()$fleet,metier=data()$metier), mean)
@@ -1513,9 +1513,9 @@ observeEvent(input$info3, {
             facet_wrap(~fleet) +
             geom_hline(yintercept=1,linetype="dashed") +
             theme_bw()) #+ scale_x_continuous(breaks = seq(2004,2014,by=4)))
-    })     
-
- ############ 4. Catchability app ##################
+  })     
+  
+  ############ 4. Catchability app ##################
   catchability <- reactive(
     if(input$Area_selector == "North_Sea") {
       readRDS("data/existing_tools/4.catchability_app/data/North_Sea/NScatchability.rds")
@@ -1602,9 +1602,9 @@ observeEvent(input$info3, {
     }
     data[,c("partF")] <- round(data[,c("partF")],8)
     data[,c("year","country","fleet","metier","stock","partF")]
-   }))
+  }))
   
- output$plotPartialF <- renderPlot({
+  output$plotPartialF <- renderPlot({
     data <- partF()
     data <- aggregate(list(partF=data$partF),list(year=data$year,stock=data$stock,
                                                   fleet=data$fleet, metier=data$metier,country=data$country),sum)
@@ -1627,7 +1627,7 @@ observeEvent(input$info3, {
             geom_point(aes(colour = factor(stock))) + geom_smooth(method = lm, fullrange = FALSE, aes(colour = factor(stock))) +
             facet_wrap(fleet ~ metier,scales="free_y") +
             theme_bw() + scale_x_continuous(breaks = seq(2004,2014,by=4)))
-    })
+  })
   
   output$Spiderplot <- renderPlot({
     data <- partF()
@@ -1652,11 +1652,11 @@ observeEvent(input$info3, {
             theme(strip.text.x = element_text(size = rel(0.8)),
                   axis.text.x = element_text(size = rel(0.5),
                                              angle = 360/(2*pi)*rev( pi/2 + seq( pi/nstock, 2*pi-pi/nstock, len=nstock))
-                 ))
+                  ))
     )
-   })
+  })
   
-############## Mapping ##########################
+  ############## Mapping ##########################
   sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
   stocks <- read.csv("H:\\TCM mapping\\maps\\stocks_SS.csv")
   #stocks_list <- list('cod-7e-k','had-7b-k','hke-nrtn','meg-ivvi','meg-rock','mgw-78','whg-7b-k')
@@ -1947,7 +1947,7 @@ observeEvent(input$info3, {
   
   
   ######FCube######
-    ##page1##
+  ##page1##
   output$table2 <- function() {
     text_tbl <- data.frame(
       Scenarios = c(
@@ -2692,78 +2692,78 @@ observeEvent(input$info3, {
   })
   
   
-###end of server###  
-}
+  ###end of server###  
+    }
 
 
 ########################################## ui ##################################################
 
 
 ui <- fluidPage(tags$head(
-tags$style(HTML("@import url('//fonts.googleapis.com/css?family=Lobster|Cabin:400,700');
-.btn:focus{ background-color:lightgrey;}
-.dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
-.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing,
-.dataTables_wrapper .dataTables_paginate {color: #ffffff; }
- thead { color: #ffffff;}tbody {color: #000000;"))),
-tags$style(
-type = "text/css",
-".shiny-output-error { visibility: hidden; }",
-".shiny-output-error:before { visibility: hidden; }"),
-theme = shinytheme("superhero"), #spacelab
-titlePanel("Mixed Fisheries"),
-navlistPanel(id="mainpanel", widths=c(2,10), 
-             tabPanel(" Introduction",
-                      value = "mp", icon = icon("home"),
-                      fluidRow(column(width = 5, offset = 4, h2("Celtic Seas Ecoregion.",
-                                                                style = "font-family: 'Lobster', cursive;
-                                                                font-weight: 500; line-height: 1.1; "))), hr(),
-                      div(style = " border-radius: 25px;height:200px;background-color:#e5f5e0 ;color: black",
-                          tags$ul(
-                            "The Celtic Seas ecoregion covers the northwestern shelf seas of the EU. 
-                            It includes areas of the deeper eastern Atlantic Ocean and coastal seas that are
-                            heavily influenced by oceanic inputs. The ecoregion ranges from north of Shetland 
-                            to Brittany in the south. Three key areas constitute this ecoregion:",
-                            p(""),
-                            tags$li("Northern parts; the Malin shelf, west of Scotland, eastern Rockall Bank, 
-                                    and north of Scotland (parts of Subdivision 2.a.2, 
-                                    divisions 4.a and 6.a, and Subdivision 6.b.2);"),
-                            p(""),
-                            tags$li("the Celtic Sea and west of Ireland (Division 7.b and Subdivision 7.c.2; 
-                                    parts of divisions 7.e, 7.f, 7.g, 7.h, and subdivisions 7.j.2
-                                    and 7.k.2);"),
-                            p(""),
-                            tags$li("the Irish Sea (Division 7.a)."),
-                            "In the north there are strong linkages with the North Sea, in the southeast
-                            a strong linkage with the channel area, and in the south a strong link with the Bay of Biscay. 
-                            The eastern part of the Rockall Bank is within the geographic scope of the ecoregion although 
-                            it is separated from the western European shelf by the Rockall Trough."
-                            )), useShinyalert(), br(),
+  tags$style(HTML("@import url('//fonts.googleapis.com/css?family=Lobster|Cabin:400,700');
+                  .btn:focus{ background-color:lightgrey;}
+                  .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
+                  .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing,
+                  .dataTables_wrapper .dataTables_paginate {color: #ffffff; }
+                  thead { color: #ffffff;}tbody {color: #000000;"))),
+  tags$style(
+    type = "text/css",
+    ".shiny-output-error { visibility: hidden; }",
+    ".shiny-output-error:before { visibility: hidden; }"),
+  theme = shinytheme("superhero"), #spacelab
+  titlePanel("Mixed Fisheries"),
+  navlistPanel(id="mainpanel", widths=c(2,10), 
+               tabPanel(" Introduction",
+                        value = "mp", icon = icon("home"),
+                        fluidRow(column(width = 5, offset = 4, h2("Celtic Seas Ecoregion.",
+                                                                  style = "font-family: 'Lobster', cursive;
+                                                                  font-weight: 500; line-height: 1.1; "))), hr(),
+                        div(style = " border-radius: 25px;height:200px;background-color:#e5f5e0 ;color: black",
+                            tags$ul(
+                              "The Celtic Seas ecoregion covers the northwestern shelf seas of the EU. 
+                              It includes areas of the deeper eastern Atlantic Ocean and coastal seas that are
+                              heavily influenced by oceanic inputs. The ecoregion ranges from north of Shetland 
+                              to Brittany in the south. Three key areas constitute this ecoregion:",
+                              p(""),
+                              tags$li("Northern parts; the Malin shelf, west of Scotland, eastern Rockall Bank, 
+                                      and north of Scotland (parts of Subdivision 2.a.2, 
+                                      divisions 4.a and 6.a, and Subdivision 6.b.2);"),
+                              p(""),
+                              tags$li("the Celtic Sea and west of Ireland (Division 7.b and Subdivision 7.c.2; 
+                                      parts of divisions 7.e, 7.f, 7.g, 7.h, and subdivisions 7.j.2
+                                      and 7.k.2);"),
+                              p(""),
+                              tags$li("the Irish Sea (Division 7.a)."),
+                              "In the north there are strong linkages with the North Sea, in the southeast
+                              a strong linkage with the channel area, and in the south a strong link with the Bay of Biscay. 
+                              The eastern part of the Rockall Bank is within the geographic scope of the ecoregion although 
+                              it is separated from the western European shelf by the Rockall Trough."
+                              )), useShinyalert(), br(),
                         fluidRow(
-                        column(width = 6, div(
-                          style = " border-radius: 25px;height:27px;background-color:#cc4c02;font-size:
-                          22px;color:lightblue;",
-                          tags$ul("Celtic Seas Ecoregion Map.")
-                        )),
-                        column(width = 3, div(
-                          style = " border-radius: 25px;height:27px;background-color:#cc4c02;font-size:
-                          22px;color:lightblue;",
-                          tags$ul("Explore.")
-                        ), hr())
-                      ),
-                      fluidRow(column(width = 6, h5("* showing major cities, ports, and ICES areas.")),
+                          column(width = 6, div(
+                            style = " border-radius: 25px;height:27px;background-color:#cc4c02;font-size:
+                            22px;color:lightblue;",
+                            tags$ul("Celtic Seas Ecoregion Map.")
+                          )),
                           column(width = 3, div(
-                          style = "display: inline-block;vertical-align:top; width: 225px;",
-                          selectInput("FishGear", "", choices = c("Who is Fishing", "Gear Type")), class = "btn-link"
-                               )), uiOutput("I_selections")),
-                      fluidRow(column(
-                        width = 6,img(
-                          src = "images/Celtic_Seas_map.png", height = "400px",
-                          width = "600px", style = "padding-top: 7px; padding-bottom: 5px; 
-                          padding-right: 20px;"
-                        )
-                        ), column(6, uiOutput("fishing")))
-                      ),
+                            style = " border-radius: 25px;height:27px;background-color:#cc4c02;font-size:
+                            22px;color:lightblue;",
+                            tags$ul("Explore.")
+                          ), hr())
+                        ),
+                        fluidRow(column(width = 6, h5("* showing major cities, ports, and ICES areas.")),
+                                 column(width = 3, div(
+                                   style = "display: inline-block;vertical-align:top; width: 225px;",
+                                   selectInput("FishGear", "", choices = c("Who is Fishing", "Gear Type")), class = "btn-link"
+                                 )), uiOutput("I_selections")),
+                        fluidRow(column(
+                          width = 6,img(
+                            src = "images/Celtic_Seas_map.png", height = "400px",
+                            width = "600px", style = "padding-top: 7px; padding-bottom: 5px; 
+                            padding-right: 20px;"
+                          )
+                          ), column(6, uiOutput("fishing")))
+                        ),
                
                tabPanel(" Hackathon Work", value = "hw", icon = icon("folder-open"),
                         h3("Visualising the implications of catch decreases for fleets in a mixed fishery context"),
@@ -2771,300 +2771,300 @@ navlistPanel(id="mainpanel", widths=c(2,10),
                         absolutePanel(id="controls",top = 80, left = 700, width = 400, height = "auto", fixed=FALSE, draggable = TRUE,
                                       sliderInput("whitingslider", "Choose % reduction in Whiting Catch:", min = -100, max =0, value = 0, 
                                                   step = NULL, sep = "", animate = FALSE, post  = " %"))),
-              tabPanel("Landings: Celtic Sea",
-                      value = "mi", icon = icon("fish"),
-                      tabsetPanel(
-                        id = "Ltabselected", type = "pills",
-                        tabPanel("Page1",
-                                 value = "page1",
-                                 fluidRow(
-                                 column(width = 5, offset = 4, h2("The Proportion of Landings.", style = "font-family: 'Lobster', cursive;
-                                  font-weight: 500; line-height: 1.1; ")),
-                                  actionButton("info1", icon("info-circle"), style = "padding-top: 7px;
-                                               padding-bottom: 5px; padding-right: 20px;", class = "btn-primary")
-                                   ), hr(),
-                                 fluidRow(
-                                   column(width = 3, div(
-                                   style = "display: inline-block;vertical-align:top; width: 225px;",
-                                    selectInput("Country", "Select Country:", choices = levels(test$Country)), class = "btn-link"
-                                   )),
-                                   column(width = 3, div(
-                                     style = "display: inline-block;vertical-align:top; width: 225px;",
-                                     selectInput("name", "Select Parameter:",
-                                                 choices = c("Metier by Species" = 1, "Species by Metier" = 2)
-                                     ), class = "btn-link"
-                                   )),
-                                   uiOutput("L_selections")
-                                 ),
-                                 fluidRow(
-                                   column(width = 8, plotlyOutput("plotL1")
-                                          %>%
-                                            withSpinner(color = "#0dc5c1")),
-                                   column(width = 4, uiOutput("pieUI")
-                                          %>%
-                                            withSpinner(color = "#0dc5c1"))
-                                 )
-                        ),
-                        tabPanel("Page2",
-                                 value = "page2",
-                                 fluidRow(
-                                   column(width = 5, offset = 4, h2("Total Landings.", style = "font-family: 'Lobster', cursive;
-                                                                    font-weight: 500; line-height: 1.1; ")),
-                                   actionButton("info2", icon("info-circle"),
-                                                style = "padding-top: 7px;padding-bottom: 5px; padding-right: 20px;", class = "btn-primary"
+               tabPanel("Landings: Celtic Sea",
+                        value = "mi", icon = icon("fish"),
+                        tabsetPanel(
+                          id = "Ltabselected", type = "pills",
+                          tabPanel("Page1",
+                                   value = "page1",
+                                   fluidRow(
+                                     column(width = 5, offset = 4, h2("The Proportion of Landings.", style = "font-family: 'Lobster', cursive;
+                                                                      font-weight: 500; line-height: 1.1; ")),
+                                     actionButton("info1", icon("info-circle"), style = "padding-top: 7px;
+                                                  padding-bottom: 5px; padding-right: 20px;", class = "btn-primary")
+                                     ), hr(),
+                                   fluidRow(
+                                     column(width = 3, div(
+                                       style = "display: inline-block;vertical-align:top; width: 225px;",
+                                       selectInput("Country", "Select Country:", choices = levels(test$Country)), class = "btn-link"
+                                     )),
+                                     column(width = 3, div(
+                                       style = "display: inline-block;vertical-align:top; width: 225px;",
+                                       selectInput("name", "Select Parameter:",
+                                                   choices = c("Metier by Species" = 1, "Species by Metier" = 2)
+                                       ), class = "btn-link"
+                                     )),
+                                     uiOutput("L_selections")
+                                   ),
+                                   fluidRow(
+                                     column(width = 8, plotlyOutput("plotL1")
+                                            %>%
+                                              withSpinner(color = "#0dc5c1")),
+                                     column(width = 4, uiOutput("pieUI")
+                                            %>%
+                                              withSpinner(color = "#0dc5c1"))
                                    )
-                                   ), hr(),
-                                 fluidRow(column(3, div(
-                                   style = "width:220px;",
-                                   tabsetPanel(
-                                     id = "LP2tabset", tabPanel(
-                                       "Selection 1", selectInput("set1", label = "Select Metier", levels(test$Metier), selectize = T),
-                                       selectInput("set2", label = "Select Year", c(2009:2017), selectize = T),
-                                       selectInput("Landings1", label = "Landings:",
-                                                   choices = c("Weight in tonnes", "Value in Euros", "Price per KG"), selectize = T)
                                      ),
-                                     tabPanel(
-                                       "Selection 2", selectInput("set3", label = "Select Species", levels(test$Species), selectize = T),
-                                       selectInput("set4", label = "Select Year", c(2009:2017), selectize = T), 
-                                       selectInput("Landings2", label = "Landings:", choices = c("Weight in tonnes", "Value in Euros", "Price per KG"), selectize = T)
+                          tabPanel("Page2",
+                                   value = "page2",
+                                   fluidRow(
+                                     column(width = 5, offset = 4, h2("Total Landings.", style = "font-family: 'Lobster', cursive;
+                                                                      font-weight: 500; line-height: 1.1; ")),
+                                     actionButton("info2", icon("info-circle"),
+                                                  style = "padding-top: 7px;padding-bottom: 5px; padding-right: 20px;", class = "btn-primary"
                                      )
-                                   ), class = "btn-link"
-                                 )), column(width = 9, uiOutput("Lpage2")))
-                        ),
-                        tabPanel("Page3",
-                                 value = "page3",
-                                 fluidRow(column(width = 5, offset = 4, h2("Landings Data.", style = "font-family: 'Lobster', cursive;
-                                                                           font-weight: 500; line-height: 1.1; "))), hr(),
-                                 fluidRow(
-                                   column(2, selectInput("LCountry", "Country:", c("All", unique(as.character(CelticEcoSpecies$Country))),
-                                                         multiple = F, selected = "All"
-                                   ), class = "btn-link"),
-                                   column(2, selectInput("LYear", "Year:", c("All", unique(as.character(CelticEcoSpecies$Year))),
-                                                         multiple = F, selected = "All"
-                                   ), class = "btn-link"),
-                                   column(3, selectInput("LMetier", "Metier:", c("All", unique(as.character(CelticEcoSpecies$lvl4))),
-                                                         multiple = F, selected = "All"
-                                   ), class = "btn-link"),
-                                   column(3, selectInput("LSpecies", "Species:", c("All", unique(as.character(CelticEcoSpecies$Species))),
-                                                         multiple = F, selected = "All"
-                                   ), class = "btn-link"),
-                                   column(2, selectInput("LArea", "Area:", c("All", unique(as.character(CelticEcoSpecies$Area))),
-                                                         multiple = F, selected = "All"
-                                   ), class = "btn-link")
-                                 ),
-                                 fluidRow(DT::dataTableOutput("tableL"))
-                                 )
-)
-)
-              , tabPanel(" Effort: Celtic Sea",
-                         value = "sb", icon = icon("ship"),
-                         tabsetPanel(
-                           id = "Etabselected", type = "pills",
-                           tabPanel("Page1",
-                                    value = "page1",
-                                    fluidRow(
-                                      column(width = 5, offset = 4, h2("The Proportion of Effort.", style = "font-family: 'Lobster', cursive;
-                                                                       font-weight: 500; line-height: 1.1; ")),
-                                      actionButton("info3", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;", class = "btn-primary")
-                                      ), hr(),
-                                    fluidRow(
-                                      column(width = 3, div(style = "display: inline-block;vertical-align:top; width: 225px;", selectInput("CountryE", "Select Country:", choices = levels(test$Country)), class = "btn-link")),
-                                      column(width = 3, div(style = "display: inline-block;vertical-align:top; width: 225px;", selectInput("nameE", "Select Parameter:", choices = c("Metier by Vessel length" = 1, "Vessel length by Metier" = 2)), class = "btn-link")),
-                                      uiOutput("E_selections")
-                                    ),
-                                    fluidRow(
-                                      column(width = 8, plotlyOutput("plotE1")
-                                             %>%
-                                               withSpinner(color = "#0dc5c1")),
-                                      column(width = 4, uiOutput("pieEUI")
-                                             %>%
-                                               withSpinner(color = "#0dc5c1"))
-                                    )
-                           ),
-                           tabPanel("Page2",
-                                    value = "page2",
-                                    fluidRow(
-                                      column(width = 5, offset = 4, h2("Total Effort KW_days.", style = "font-family: 'Lobster', cursive;
-                                                                       font-weight: 500; line-height: 1.1; ")),
-                                      actionButton("info4", icon("info-circle"), style = "padding-top: 7px;padding-bottom: 5px; 
-                                                   padding-right: 20px;", class = "btn-primary")
-                                      ), hr(),
-                                    fluidRow(column(3, div(
-                                      style = "width:220px;",
-                                      tabsetPanel(
-                                        id = "EP2tabset",
-                                        tabPanel(
-                                          "Selection 1", selectInput("setE1", label = "Select Metier", levels(testE$Metier), selectize = T),
-                                          selectInput("setE2", label = "Select Year", c(2009:2017), selectize = T)
-                                        ),
-                                        tabPanel(
-                                          "Selection 2", selectInput("setE3", label = "Select Vessel Length", levels(testE$Vessel_length), selectize = T),
-                                          selectInput("setE4", label = "Select Year", c(2009:2017), selectize = T)
-                                        )
-                                      ), class = "btn-link"
-                                    )), column(width = 9, uiOutput("Epage2")))
-                                      ),
-                           tabPanel("Page3",
-                                    value = "page3",
-                                    fluidRow(column(width = 5, offset = 4, h2("Effort Data.", style = "font-family: 'Lobster', cursive;
-                                                                              font-weight: 500; line-height: 1.1; "))), hr(),
-                                    fluidRow(
-                                      column(2, selectInput("ECountry", "Country:", c("All", unique(as.character(CelticCE$Country))),
-                                                            multiple = F, selected = "All"
-                                      ), class = "btn-link"),
-                                      column(2, selectInput("EYear", "Year:", c("All", unique(as.character(CelticCE$Year))),
-                                                            multiple = F, selected = "All"
-                                      ), class = "btn-link"),
-                                      column(3, selectInput("EMetier", "Metier:", c("All", unique(as.character(CelticCE$lvl4))),
-                                                            multiple = F, selected = "All"
-                                      ), class = "btn-link"),
-                                      column(3, selectInput("EVessel", "Vessel Length:", c("All", unique(as.character(CelticCE$Vessel_length))),
-                                                            multiple = F, selected = "All"
-                                      ), class = "btn-link"),
-                                      column(2, selectInput("EArea", "Area:", c("All", unique(as.character(CelticCE$Area))),
-                                                            multiple = F, selected = "All"
-                                      ), class = "btn-link")
-                                    ),
-                                    # Create a new row for the table.
-                                    fluidRow(DT::dataTableOutput("tableE"))
-                                    )
-                           )
+                                     ), hr(),
+                                   fluidRow(column(3, div(
+                                     style = "width:220px;",
+                                     tabsetPanel(
+                                       id = "LP2tabset", tabPanel(
+                                         "Selection 1", selectInput("set1", label = "Select Metier", levels(test$Metier), selectize = T),
+                                         selectInput("set2", label = "Select Year", c(2009:2017), selectize = T),
+                                         selectInput("Landings1", label = "Landings:",
+                                                     choices = c("Weight in tonnes", "Value in Euros", "Price per KG"), selectize = T)
+                                       ),
+                                       tabPanel(
+                                         "Selection 2", selectInput("set3", label = "Select Species", levels(test$Species), selectize = T),
+                                         selectInput("set4", label = "Select Year", c(2009:2017), selectize = T), 
+                                         selectInput("Landings2", label = "Landings:", choices = c("Weight in tonnes", "Value in Euros", "Price per KG"), selectize = T)
+                                       )
+                                     ), class = "btn-link"
+                                   )), column(width = 9, uiOutput("Lpage2")))
+                          ),
+                          tabPanel("Page3",
+                                   value = "page3",
+                                   fluidRow(column(width = 5, offset = 4, h2("Landings Data.", style = "font-family: 'Lobster', cursive;
+                                                                             font-weight: 500; line-height: 1.1; "))), hr(),
+                                   fluidRow(
+                                     column(2, selectInput("LCountry", "Country:", c("All", unique(as.character(CelticEcoSpecies$Country))),
+                                                           multiple = F, selected = "All"
+                                     ), class = "btn-link"),
+                                     column(2, selectInput("LYear", "Year:", c("All", unique(as.character(CelticEcoSpecies$Year))),
+                                                           multiple = F, selected = "All"
+                                     ), class = "btn-link"),
+                                     column(3, selectInput("LMetier", "Metier:", c("All", unique(as.character(CelticEcoSpecies$lvl4))),
+                                                           multiple = F, selected = "All"
+                                     ), class = "btn-link"),
+                                     column(3, selectInput("LSpecies", "Species:", c("All", unique(as.character(CelticEcoSpecies$Species))),
+                                                           multiple = F, selected = "All"
+                                     ), class = "btn-link"),
+                                     column(2, selectInput("LArea", "Area:", c("All", unique(as.character(CelticEcoSpecies$Area))),
+                                                           multiple = F, selected = "All"
+                                     ), class = "btn-link")
+                                   ),
+                                   fluidRow(DT::dataTableOutput("tableL"))
+                                   )
+                          )
+               )
+               , tabPanel(" Effort: Celtic Sea",
+                          value = "sb", icon = icon("ship"),
+                          tabsetPanel(
+                            id = "Etabselected", type = "pills",
+                            tabPanel("Page1",
+                                     value = "page1",
+                                     fluidRow(
+                                       column(width = 5, offset = 4, h2("The Proportion of Effort.", style = "font-family: 'Lobster', cursive;
+                                                                        font-weight: 500; line-height: 1.1; ")),
+                                       actionButton("info3", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;", class = "btn-primary")
+                                       ), hr(),
+                                     fluidRow(
+                                       column(width = 3, div(style = "display: inline-block;vertical-align:top; width: 225px;", selectInput("CountryE", "Select Country:", choices = levels(test$Country)), class = "btn-link")),
+                                       column(width = 3, div(style = "display: inline-block;vertical-align:top; width: 225px;", selectInput("nameE", "Select Parameter:", choices = c("Metier by Vessel length" = 1, "Vessel length by Metier" = 2)), class = "btn-link")),
+                                       uiOutput("E_selections")
+                                     ),
+                                     fluidRow(
+                                       column(width = 8, plotlyOutput("plotE1")
+                                              %>%
+                                                withSpinner(color = "#0dc5c1")),
+                                       column(width = 4, uiOutput("pieEUI")
+                                              %>%
+                                                withSpinner(color = "#0dc5c1"))
+                                     )
+                            ),
+                            tabPanel("Page2",
+                                     value = "page2",
+                                     fluidRow(
+                                       column(width = 5, offset = 4, h2("Total Effort KW_days.", style = "font-family: 'Lobster', cursive;
+                                                                        font-weight: 500; line-height: 1.1; ")),
+                                       actionButton("info4", icon("info-circle"), style = "padding-top: 7px;padding-bottom: 5px; 
+                                                    padding-right: 20px;", class = "btn-primary")
+                                       ), hr(),
+                                     fluidRow(column(3, div(
+                                       style = "width:220px;",
+                                       tabsetPanel(
+                                         id = "EP2tabset",
+                                         tabPanel(
+                                           "Selection 1", selectInput("setE1", label = "Select Metier", levels(testE$Metier), selectize = T),
+                                           selectInput("setE2", label = "Select Year", c(2009:2017), selectize = T)
+                                         ),
+                                         tabPanel(
+                                           "Selection 2", selectInput("setE3", label = "Select Vessel Length", levels(testE$Vessel_length), selectize = T),
+                                           selectInput("setE4", label = "Select Year", c(2009:2017), selectize = T)
+                                         )
+                                       ), class = "btn-link"
+                                     )), column(width = 9, uiOutput("Epage2")))
+                                       ),
+                            tabPanel("Page3",
+                                     value = "page3",
+                                     fluidRow(column(width = 5, offset = 4, h2("Effort Data.", style = "font-family: 'Lobster', cursive;
+                                                                               font-weight: 500; line-height: 1.1; "))), hr(),
+                                     fluidRow(
+                                       column(2, selectInput("ECountry", "Country:", c("All", unique(as.character(CelticCE$Country))),
+                                                             multiple = F, selected = "All"
+                                       ), class = "btn-link"),
+                                       column(2, selectInput("EYear", "Year:", c("All", unique(as.character(CelticCE$Year))),
+                                                             multiple = F, selected = "All"
+                                       ), class = "btn-link"),
+                                       column(3, selectInput("EMetier", "Metier:", c("All", unique(as.character(CelticCE$lvl4))),
+                                                             multiple = F, selected = "All"
+                                       ), class = "btn-link"),
+                                       column(3, selectInput("EVessel", "Vessel Length:", c("All", unique(as.character(CelticCE$Vessel_length))),
+                                                             multiple = F, selected = "All"
+                                       ), class = "btn-link"),
+                                       column(2, selectInput("EArea", "Area:", c("All", unique(as.character(CelticCE$Area))),
+                                                             multiple = F, selected = "All"
+                                       ), class = "btn-link")
+                                     ),
+                                     # Create a new row for the table.
+                                     fluidRow(DT::dataTableOutput("tableE"))
+                                     )
+  )
 ),
-               
-               tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
-                        selectInput("Area_selector","Select Area", choices=c("North_Sea", "Celtic_Sea"), selected = "North_Sea"),
-                        selectInput(inputId = "Toolselected", label="Tool", choices=c("Raw accessions App","Effort App","Catchability App","Partial F App","Quota share App"),
-                                    multiple=FALSE, selected = "Catchability App"),
-                                    #conditionalPanel("input.Toolselected=='Raw accessions App'"),
-                                    conditionalPanel(condition = "input.Toolselected == 'Effort App'",
-                                             tabsetPanel(id="effortappPanel", type="pills",
-                                                         tabPanel("Fleet Effort Tables",
-                                                                  fluidPage(
-                                                                    titlePanel("Effort data"), #paste(textOutput("Area"),
-                                                                    fluidRow(
-                                                                      column(3,uiOutput("fleet.yearfilter")),
-                                                                      column(3,uiOutput("fleet.countryfilter"))
-                                                                    ),
-                                                                    fluidRow(
-                                                                      DT::dataTableOutput("efftable")
-                                                                      %>% withSpinner(color="#0dc5c1")
-                                                                    )
-                                                                  )),
-                                                         tabPanel("Effort time series",
-                                                                  fluidPage(
-                                                                    titlePanel("Effort data"), #paste(Area,"Effort data")),
-                                                                    fluidRow(
-                                                                      column(3,uiOutput("time.countryfilter")) 
-                                                                    ),
-                                                                    mainPanel(
-                                                                      plotOutput("plotEffTS", width = '800px', height = '800px')
-                                                                      %>% withSpinner(color="#0dc5c1")
-                                                                    )
-                                                                  ) #end of fluidPage
-                                                         ),#end of tabPanel
-                                                         tabPanel("Total effort by fleet",
-                                                                  fluidPage(
-                                                                    titlePanel(paste("Effort by fleet relative to first data year")), #paste(Area,"Effort by fleet relative to first data year")),
-                                                                    mainPanel(
-                                                                      plotOutput("plotEff_Fl", width = '800px', height = '800px')
-                                                                     %>% withSpinner(color="#0dc5c1")
-                                                                    )
-                                                                  ) #end of FluidPage
-                                                          ) #end of tabPanel
-                                                        ) #end of tabsetPanel
-                                             ), #end of conditionalPanel
-                                conditionalPanel("input.Toolselected == 'Catchability App'", 
-                                            tabsetPanel(id="FleetCatchabilityPanel", type="tabs",
-                                                         tabPanel("Fleet Catchability Tables",
-                                                                  fluidPage(
-                                                                    titlePanel("Catchability data"), #paste(Area,
-                                                                    fluidRow(
-                                                                      column(3,uiOutput("table.yearfilter")),
-                                                                      column(3,uiOutput("table.stockfilter"))
-                                                                    ),
-                                                                    fluidRow(
-                                                                      DT::dataTableOutput("Catchtable")
-                                                                      %>% withSpinner(color="#0dc5c1")
-                                                                    )
-                                                                  )),
-                                                         tabPanel("Catchability Plots",
-                                                                  fluidPage(
-                                                                    titlePanel("Catchability data"), #paste(Area,
-                                                                    fluidRow(
-                                                                      column(3,uiOutput("plot.countryfilter")),
-                                                                      column(3,uiOutput("plot.stockfilter"))
-                                                                    ),
-                                                                    mainPanel(
-                                                                      plotOutput("plotCatchability", width = '800px', height = '800px')
-                                                                      %>% withSpinner(color="#0dc5c1")
-                                                                    )
-                                                                  )
-                                                         )
-                                             )
-                                    ),
-                               conditionalPanel("input.Toolselected == 'Partial F App'",
-                                             tabsetPanel(id="Partial F Panel", type="tabs",
-                                                         tabPanel("Fleet Partial F Tables",
-                                                                  fluidPage(
-                                                                    titlePanel("Partial F data"),#paste(Area,
-                                                                    fluidRow(
-                                                                      column(3,uiOutput("PF.year.table")),
-                                                                      column(3,uiOutput("PF.stock.table"))        
-                                                                    ),
-                                                                    fluidRow(
-                                                                      DT::dataTableOutput("PFtable")
-                                                                      %>% withSpinner(color="#0dc5c1")
-                                                                    )
-                                                                  )),
-                                                         tabPanel("Partial F time series",
-                                                                  fluidPage(
-                                                                    titlePanel("Partial F data"),#paste(Area,)
-                                                                    fluidRow(
-                                                                      column(3,uiOutput("PF.country.plot1")
-                                                                      ),
-                                                                      column(3,uiOutput("PF.stock.plot1")
-                                                                      )
-                                                                    ),
-                                                                    mainPanel(
-                                                                      plotOutput("plotPartialF", width = '800px', height = '800px')
-                                                                      %>% withSpinner(color="#0dc5c1")
-                                                                    )
-                                                                  ) #end of FluidPage
-                                                         ),#end of tabPanel
-                                                         tabPanel("Partial F spider chart",
-                                                                  fluidPage(
-                                                                    titlePanel("Partial F data"), #paste(Area,)
-                                                                    fluidRow(
-                                                                      column(3,uiOutput("PF.year.plot2")
-                                                                      ),
-                                                                      column(3,uiOutput("PF.stock.plot2")
-                                                                      )
-                                                                    ),
-                                                                    mainPanel(
-                                                                      plotOutput("Spiderplot", width = '800px', height = '800px')
-                                                                      %>% withSpinner(color="#0dc5c1")
-                                                                    )
-                                                                  ) #end of FluidPage
-                                                         )#end of tabPanel
-                                             )#end of tabsetPanel
-                                    ), #end of Partial F conditionalPanel
-                        conditionalPanel("input.Toolselected == 'Quota share App'")
-                        ),
-               tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
-                        fluidRow(column(width=5, selectInput("Species_selector","Select Species", choices=c(sp)),
-                                        plotOutput('Stockareas')),
-                                 column(width=5,offset=1,
-                                        selectizeInput(inputId = "Stockselector", label="Select Stock",
-                                                       choices=NULL, multiple=FALSE),
-                                        plotOutput('Stockoverlap'))
-                        ),
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br()
-                        ),
+
+tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
+         selectInput("Area_selector","Select Area", choices=c("North_Sea", "Celtic_Sea"), selected = "North_Sea"),
+         selectInput(inputId = "Toolselected", label="Tool", choices=c("Raw accessions App","Effort App","Catchability App","Partial F App","Quota share App"),
+                     multiple=FALSE, selected = "Catchability App"),
+         #conditionalPanel("input.Toolselected=='Raw accessions App'"),
+         conditionalPanel(condition = "input.Toolselected == 'Effort App'",
+                          tabsetPanel(id="effortappPanel", type="pills",
+                                      tabPanel("Fleet Effort Tables",
+                                               fluidPage(
+                                                 titlePanel("Effort data"), #paste(textOutput("Area"),
+                                                 fluidRow(
+                                                   column(3,uiOutput("fleet.yearfilter")),
+                                                   column(3,uiOutput("fleet.countryfilter"))
+                                                 ),
+                                                 fluidRow(
+                                                   DT::dataTableOutput("efftable")
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               )),
+                                      tabPanel("Effort time series",
+                                               fluidPage(
+                                                 titlePanel("Effort data"), #paste(Area,"Effort data")),
+                                                 fluidRow(
+                                                   column(3,uiOutput("time.countryfilter")) 
+                                                 ),
+                                                 mainPanel(
+                                                   plotOutput("plotEffTS", width = '800px', height = '800px')
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               ) #end of fluidPage
+                                      ),#end of tabPanel
+                                      tabPanel("Total effort by fleet",
+                                               fluidPage(
+                                                 titlePanel(paste("Effort by fleet relative to first data year")), #paste(Area,"Effort by fleet relative to first data year")),
+                                                 mainPanel(
+                                                   plotOutput("plotEff_Fl", width = '800px', height = '800px')
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               ) #end of FluidPage
+                                      ) #end of tabPanel
+                          ) #end of tabsetPanel
+         ), #end of conditionalPanel
+         conditionalPanel("input.Toolselected == 'Catchability App'", 
+                          tabsetPanel(id="FleetCatchabilityPanel", type="tabs",
+                                      tabPanel("Fleet Catchability Tables",
+                                               fluidPage(
+                                                 titlePanel("Catchability data"), #paste(Area,
+                                                 fluidRow(
+                                                   column(3,uiOutput("table.yearfilter")),
+                                                   column(3,uiOutput("table.stockfilter"))
+                                                 ),
+                                                 fluidRow(
+                                                   DT::dataTableOutput("Catchtable")
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               )),
+                                      tabPanel("Catchability Plots",
+                                               fluidPage(
+                                                 titlePanel("Catchability data"), #paste(Area,
+                                                 fluidRow(
+                                                   column(3,uiOutput("plot.countryfilter")),
+                                                   column(3,uiOutput("plot.stockfilter"))
+                                                 ),
+                                                 mainPanel(
+                                                   plotOutput("plotCatchability", width = '800px', height = '800px')
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               )
+                                      )
+                          )
+         ),
+         conditionalPanel("input.Toolselected == 'Partial F App'",
+                          tabsetPanel(id="Partial F Panel", type="tabs",
+                                      tabPanel("Fleet Partial F Tables",
+                                               fluidPage(
+                                                 titlePanel("Partial F data"),#paste(Area,
+                                                 fluidRow(
+                                                   column(3,uiOutput("PF.year.table")),
+                                                   column(3,uiOutput("PF.stock.table"))        
+                                                 ),
+                                                 fluidRow(
+                                                   DT::dataTableOutput("PFtable")
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               )),
+                                      tabPanel("Partial F time series",
+                                               fluidPage(
+                                                 titlePanel("Partial F data"),#paste(Area,)
+                                                 fluidRow(
+                                                   column(3,uiOutput("PF.country.plot1")
+                                                   ),
+                                                   column(3,uiOutput("PF.stock.plot1")
+                                                   )
+                                                 ),
+                                                 mainPanel(
+                                                   plotOutput("plotPartialF", width = '800px', height = '800px')
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               ) #end of FluidPage
+                                      ),#end of tabPanel
+                                      tabPanel("Partial F spider chart",
+                                               fluidPage(
+                                                 titlePanel("Partial F data"), #paste(Area,)
+                                                 fluidRow(
+                                                   column(3,uiOutput("PF.year.plot2")
+                                                   ),
+                                                   column(3,uiOutput("PF.stock.plot2")
+                                                   )
+                                                 ),
+                                                 mainPanel(
+                                                   plotOutput("Spiderplot", width = '800px', height = '800px')
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               ) #end of FluidPage
+                                      )#end of tabPanel
+                          )#end of tabsetPanel
+         ), #end of Partial F conditionalPanel
+         conditionalPanel("input.Toolselected == 'Quota share App'")
+),
+tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
+         fluidRow(column(width=5, selectInput("Species_selector","Select Species", choices=c(sp)),
+                         plotOutput('Stockareas')),
+                  column(width=5,offset=1,
+                         selectizeInput(inputId = "Stockselector", label="Select Stock",
+                                        choices=NULL, multiple=FALSE),
+                         plotOutput('Stockoverlap'))
+         ),
+         br(),
+         br(),
+         br(),
+         br(),
+         br(),
+         br()
+),
 tabPanel("Scenarios: Celtic Sea",
          value = "sc", icon = icon("line-chart"),
          tabsetPanel(
@@ -3233,18 +3233,18 @@ tabPanel("Scenarios: Celtic Sea",
                           conditionalPanel(condition = "input.FCubeFilter == 3", uiOutput("FCubepage33")) # plotOutput("FCubeCircularplot3",width = 800 , height = 700))
                         )
                       ))
-                   
+                      
                       )
-)
-)
-         )
-                        ),
+                      )
+      )
+    )
+),
 
-  hr(),
-  fluidRow(width =12,
-           img(src="Logos/Niamh.png", width = "1250px", height = "100px", 
-               style="display: block; margin-left: auto; margin-right: auto;margin-top:0em")
-  )
-  )
+hr(),
+fluidRow(width =12,
+         img(src="Logos/Niamh.png", width = "1250px", height = "100px", 
+             style="display: block; margin-left: auto; margin-right: auto;margin-top:0em")
+)
+)
 
 shinyApp(ui, server)
