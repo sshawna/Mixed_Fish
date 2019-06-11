@@ -1452,7 +1452,7 @@ server <- function(input, output, session) {
     }
   )
   output$fleet.yearfilter <- renderUI({
-    selectInput("year","Year:",c("All",sort(unique(as.character(partF()$year)),decreasing=T))
+    selectInput("year1","Year:",c("All",sort(unique(as.character(partF()$year)),decreasing=T))
     )
   })
   output$fleet.countryfilter <- renderUI({
@@ -1468,8 +1468,8 @@ server <- function(input, output, session) {
     data <- reactive(partF()[,c("year","country", "fleet", "metier","effort","effshare")])
     data <- aggregate(list(effort =data()$effort, effshare = data()$effshare),
                       list(year=data()$year,country = data()$country, fleet=data()$fleet,metier=data()$metier), mean)
-    if (input$year != "All") {
-      data <- data[data$year == input$year,]
+    if (input$year1 != "All") {
+      data <- data[data$year == input$year1,]
     }
     if (input$country != "All") {
       data <- data[data$country == input$country,]
@@ -1571,10 +1571,10 @@ server <- function(input, output, session) {
   
   ################### 5. Partial F app #########################
   output$PF.year.table <- renderUI({
-    selectInput("year","Year:", c("All",sort(unique(as.character(partF()$year)),decreasing=T)))
+    selectInput("year3","Year:", c("All",sort(unique(as.character(partF()$year)),decreasing=T)))
   })
   output$PF.stock.table <- renderUI({
-    selectInput("Stock","Stock",c("All",sort(unique(as.character(partF()$stock)))))
+    selectInput("Stock3","Stock",c("All",sort(unique(as.character(partF()$stock)))))
   })
   output$PF.country.plot1 <- renderUI({
     selectInput("country","Country:",c("All",sort(unique(as.character(partF()$country)))),selected = 'BE')
@@ -1594,8 +1594,8 @@ server <- function(input, output, session) {
   output$PFtable <- DT::renderDataTable(DT::datatable({
     data <- partF()[,c("year","stock","fleet", "metier","partF","country")]
     
-    if (input$year != "All") {
-      data <- data[data$year == input$year,]
+    if (input$year3 != "All") {
+      data <- data[data$year == input$year3,]
     }
     if (input$Stock != "All") {
       data <- data[data$stock == input$Stock,]
