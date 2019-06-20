@@ -17,7 +17,8 @@ library(reshape)
 library(shinyWidgets)
 library(googlesheets)
 library(reshape2)
-library(vmstools)
+library(psych)
+#library(vmstools)
 options(scipen=999)
 
 data_fish <-  read.csv(file="data/Hackathon/Data.csv") 
@@ -35,6 +36,7 @@ testL2$Price_per_KG <- round(testL2$Price_per_KG, 3)
 priceL2 <- aggregate(testL2$Price_per_KG, by = list(testL2$Year, testL2$Metier, testL2$Species), FUN = "mean")
 names(priceL2) <- c("Year", "Metier", "Species", "Price_per_KG")
 CelticCE <- read.csv("data/EfCS.csv")
+CelticCE<- CelticCE[-1]
 CelticCE$Vessel_length <- factor(CelticCE$Vessel_length, levels = c("<10", "10<24", "24<40", ">=40", "all"))
 testE <- aggregate(CelticCE$kw_days,
                    by = list(CelticCE$Country, CelticCE$Year, CelticCE$lvl4, CelticCE$Vessel_length), FUN = "sum")
@@ -50,10 +52,8 @@ shareW <- read.csv("data/FCube/share1.csv")
 effbystL <- read.csv("data/FCube/effbystL.csv")
 effbyScen <- read.csv("data/FCube/effbyScenarioW.csv")
 effbyScenL <- read.csv("data/FCube/effbyScenario.csv")
-effbymet<-read.csv("data/FCube/effortbymetier.csv")
+effbymet<-read.csv("data/FCube/effbymet.csv")
 chocked<-read.csv("data/FCube/ChockedS.csv")
-#AllCatch<-read.csv("data/FCube/AllCatchDataframe.csv")
-#CatchEffortbyScenario<-read.csv("data/FCube/ResultsCatchEffortbyScenario.csv")
 FCubepage3 <- read.csv("data/FCube/FCubePage.csv")
 FCubepage3Radar <- dcast(FCubepage3, sc + year + value ~ stock, value.var = "RelativeToSS")
 sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
@@ -806,7 +806,24 @@ server <- function(input, output, session) {
       }
       row.names(out) <- NULL
       colnames(out) <- c("Country", "Species", "Area", "Landings in tonnes")
-      datatable(out, options = list(paging = T))
+      datatable(out,  extensions = 'Buttons'
+                , options = list( 
+                  paging = T,
+                  dom = "Blfrtip"
+                  , buttons =  list(
+                    extend = "collection"
+                    , buttons = c("csv", "excel")
+                    , text = "Download"
+                  )  # end of buttons customization
+                  
+                  # customize the length menu
+                  , lengthMenu = list( c(10, 20, -1) # declare values
+                                       , c(10, 20, "All") # declare titles
+                  ) # end of lengthMenu customization
+                  , pageLength = 10
+                  
+                  
+                ))
     }
     else if (input$Landings1 == "Value in Euros") {
       out <- test1()[test1()$Species %in% selected_page21(), ][-c(2, 3, 6, 8)]
@@ -815,7 +832,24 @@ server <- function(input, output, session) {
       }
       row.names(out) <- NULL
       colnames(out) <- c("Country", "Species", "Area", "Value in Euros")
-      datatable(out, options = list(paging = T))
+      datatable(out, extensions = 'Buttons'
+                , options = list( 
+                  paging = T,
+                  dom = "Blfrtip"
+                  , buttons =  list(
+                    extend = "collection"
+                    , buttons = c("csv", "excel")
+                    , text = "Download"
+                  )  # end of buttons customization
+                  
+                  # customize the length menu
+                  , lengthMenu = list( c(10, 20, -1) # declare values
+                                       , c(10, 20, "All") # declare titles
+                  ) # end of lengthMenu customization
+                  , pageLength = 10
+                  
+                  
+                ))
     }
     else if (input$Landings1 == "Price per KG") {
       out <- test1()[test1()$Species %in% selected_page21(), ][-c(2, 3, 6, 7)]
@@ -824,10 +858,27 @@ server <- function(input, output, session) {
       }
       row.names(out) <- NULL
       colnames(out) <- c("Country", "Species", "Area", "Price per KG")
-      datatable(out, options = list(paging = T))
+      datatable(out, extensions = 'Buttons'
+                , options = list( paging = T,
+                                  dom = "Blfrtip"
+                                  , buttons =  list(
+                                    extend = "collection"
+                                    , buttons = c("csv", "excel")
+                                    , text = "Download"
+                                  )  # end of buttons customization
+                                  
+                                  # customize the length menu
+                                  , lengthMenu = list( c(10, 20, -1) # declare values
+                                                       , c(10, 20, "All") # declare titles
+                                  ) # end of lengthMenu customization
+                                  , pageLength = 10
+                                  
+                                  
+                ))
     }
   })
   
+ 
   output$LbySpec <- renderUI({
     if (dim(test1())[1] == 0) {
       h3(paste("No data available for ", input$set1, "in", input$set2, sep = " "))
@@ -946,7 +997,23 @@ server <- function(input, output, session) {
       }
       row.names(out) <- NULL
       colnames(out) <- c("Country", "Metier", "Area", "Landings in tonnes")
-      datatable(out)
+      datatable(out, extensions = 'Buttons'
+                , options = list( 
+                  dom = "Blfrtip"
+                  , buttons =  list(
+                    extend = "collection"
+                    , buttons = c("csv", "excel")
+                    , text = "Download"
+                  )  # end of buttons customization
+                  
+                  # customize the length menu
+                  , lengthMenu = list( c(10, 20, -1) # declare values
+                                       , c(10, 20, "All") # declare titles
+                  ) # end of lengthMenu customization
+                  , pageLength = 10
+                  
+                  
+                )) # end of option)
     }
     else if (input$Landings2 == "Value in Euros") {
       out <- test2()[test2()$Metier %in% selected_pageL22(), ][-c(2, 4, 6, 8)]
@@ -955,7 +1022,23 @@ server <- function(input, output, session) {
       }
       row.names(out) <- NULL
       colnames(out) <- c("Country", "Metier", "Area", "Value in Euros")
-      datatable(out)
+      datatable(out, extensions = 'Buttons'
+                , options = list( 
+                  dom = "Blfrtip"
+                  , buttons =  list(
+                    extend = "collection"
+                    , buttons = c("csv", "excel")
+                    , text = "Download"
+                  )  # end of buttons customization
+                  
+                  # customize the length menu
+                  , lengthMenu = list( c(10, 20, -1) # declare values
+                                       , c(10, 20, "All") # declare titles
+                  ) # end of lengthMenu customization
+                  , pageLength = 10
+                  
+                  
+                )) # end of option)
     }
     else if (input$Landings2 == "Price per KG") {
       out <- test2()[test2()$Metier %in% selected_pageL22(), ][-c(2, 4, 6, 7)]
@@ -964,7 +1047,24 @@ server <- function(input, output, session) {
       }
       row.names(out) <- NULL
       colnames(out) <- c("Country", "Metier", "Area", "Price per KG")
-      datatable(out)
+      datatable(out, extensions = 'Buttons'
+                , options = list( 
+                  dom = "Blfrtip"
+                  , buttons =  list(
+                    extend = "collection"
+                    , buttons = c("csv", "excel")
+                    , text = "Download"
+                  )  # end of buttons customization
+                  
+                  # customize the length menu
+                  , lengthMenu = list( c(10, 20, -1) # declare values
+                                       , c(10, 20, "All") # declare titles
+                  ) # end of lengthMenu customization
+                  , pageLength = 10
+                  
+                  
+                ) # end of option
+      )
     }
   })
   
@@ -995,7 +1095,7 @@ server <- function(input, output, session) {
   
   ###############Page3#########################
   output$tableL <- DT::renderDataTable(DT::datatable({
-    L <- CelticEcoSpecies
+    L <- CelticEcoSpecies[-c(1,2)]
     if (input$LCountry != "All") {
       L <- filter(L, Country %in% input$LCountry)
     }
@@ -1003,7 +1103,7 @@ server <- function(input, output, session) {
       L <- filter(L, Year %in% input$LYear)
     }
     if (input$LMetier != "All") {
-      L <- filter(L, FishActEUivl5 %in% input$LMetier)
+      L <- filter(L, lvl4 %in% input$LMetier)
     }
     if (input$LSpecies != "All") {
       L <- filter(L, Species %in% input$LSpecies)
@@ -1012,7 +1112,25 @@ server <- function(input, output, session) {
       L <- filter(L, Area %in% input$LArea)
     }
     L
-  }))
+  }, extensions = 'Buttons'
+  , options = list( 
+    dom = "Blfrtip"
+    , buttons =  list(
+      extend = "collection"
+      , buttons = c("csv", "excel")
+      , text = "Download"
+    )  # end of buttons customization
+    
+    # customize the length menu
+    , lengthMenu = list( c(10, 20, -1) # declare values
+                         , c(10, 20, "All") # declare titles
+    ) # end of lengthMenu customization
+    , pageLength = 10
+    
+    
+  ))) # end of option))
+  
+  
   
   
   
@@ -1321,9 +1439,24 @@ server <- function(input, output, session) {
       return(NULL)
     }
     row.names(out) <- NULL
-    datatable(out)
+    datatable(out, extensions = 'Buttons'
+              , options = list( 
+                dom = "Blfrtip"
+                , buttons =  list(
+                  extend = "collection"
+                  , buttons = c("csv", "excel")
+                  , text = "Download"
+                )  # end of buttons customization
+                
+                # customize the length menu
+                , lengthMenu = list( c(10, 20, -1) # declare values
+                                     , c(10, 20, "All") # declare titles
+                ) # end of lengthMenu customization
+                , pageLength = 10
+                
+                
+              ))
   })
-  
   
   
   
@@ -1388,8 +1521,26 @@ server <- function(input, output, session) {
       return(NULL)
     }
     row.names(out) <- NULL
-    datatable(out)
+    datatable(out, extensions = 'Buttons'
+              , options = list( 
+                dom = "Blfrtip"
+                , buttons =  list(
+                  extend = "collection"
+                  , buttons = c("csv", "excel")
+                  , text = "Download"
+                )  # end of buttons customization
+                
+                # customize the length menu
+                , lengthMenu = list( c(10, 20, -1) # declare values
+                                     , c(10, 20, "All") # declare titles
+                ) # end of lengthMenu customization
+                , pageLength = 10
+                
+                
+              ))
   })
+  
+  
   
   
   
@@ -1431,16 +1582,32 @@ server <- function(input, output, session) {
       E <- filter(E, Year %in% input$EYear)
     }
     if (input$EMetier != "All") {
-      E <- filter(E, FishActEUivl5 %in% input$EMetier)
+      E <- filter(E, lvl4 %in% input$EMetier)
     }
     if (input$EVessel != "All") {
-      E <- filter(E, VesselLen %in% input$EVessel)
+      E <- filter(E, Vessel_length %in% input$EVessel)
     }
     if (input$EArea != "All") {
       E <- filter(E, Area %in% input$EArea)
     }
     E
-  }))
+  }, extensions = 'Buttons'
+  , options = list( 
+    dom = "Blfrtip"
+    , buttons =  list(
+      extend = "collection"
+      , buttons = c("csv", "excel")
+      , text = "Download"
+    )  # end of buttons customization
+    
+    # customize the length menu
+    , lengthMenu = list( c(10, 20, -1) # declare values
+                         , c(10, 20, "All") # declare titles
+    ) # end of lengthMenu customization
+    , pageLength = 10
+    
+    
+  )))
   
   ###########Existing tools##########################
   ############## 3. Effort app #######################
@@ -1658,7 +1825,7 @@ server <- function(input, output, session) {
   
   ############## Mapping ##########################
   sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
-  stocks <- read.csv("H:\\TCM mapping\\maps\\stocks_SS.csv")
+  stocks <- read.csv("www/maps/stocks_SS.csv")
   #stocks_list <- list('cod-7e-k','had-7b-k','hke-nrtn','meg-ivvi','meg-rock','mgw-78','whg-7b-k')
   stocks_list <- levels(stocks$stock)
   #create dropdown to select stock
@@ -1715,24 +1882,27 @@ server <- function(input, output, session) {
       row_spec(2, background = "lightyellow", color = "#525252")
   }
   
-  
-  
-  
   dataForstock1 <- dataForstock %>% filter(type == "fbar")
   stock_year <- aggregate(data ~ year + Stock, data = dataForstock1, FUN = sum)
   stock_year_wide <- cast(stock_year, year ~ Stock, sum)
+  stock_year_wide$Geometric_Mean<-rep(NA,dim(stock_year_wide)[1])
+  stock_year_wide$Mean<-rep(NA,dim(stock_year_wide)[1])
+  for(i in 1:dim(stock_year_wide)[1]){stock_year_wide$Geometric_Mean[i]<-geometric.mean(as.numeric(stock_year_wide[-1][i,]))
+  stock_year_wide$Mean[i]<-mean(as.numeric(stock_year_wide[-1][i,]),na.rm = TRUE)}
   output$StockStatus <- renderPlotly({
     p <- plot_ly(stock_year_wide,
-                 x = ~year, y = ~COD_CS,type = "scatter",mode = "lines+markers" , name = "COD-CS",
-                 text = ~ paste(COD_CS, ":COD-CS"), hoverinfo = "text"
+                 x = ~year, y = ~COD_CS,type = "scatter",mode = "lines" , name = "COD-CS",
+                 text = ~ paste(year,":Year","<br> ",COD_CS, ":COD-CS"), hoverinfo = "text"
     ) %>%
-      add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(HAD_CS, ":HAD-CS")) %>%
-      add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(MON_CS, ":MON-CS")) %>%
-      add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(N_HKE, ":N-HKE")) %>%
-      add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(N_MEG, ":N-MEG")) %>%
-      add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(SOL_7E, ":SOL-7E")) %>%
-      add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(SOL_7FG, ":SOL-7FG")) %>%
-      add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(WHG_CS, ":WHG-CS")) %>%
+      add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(year,":Year","<br> ",HAD_CS, ":HAD-CS")) %>%
+      add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(year,":Year","<br> ",MON_CS, ":MON-CS")) %>%
+      add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(year,":Year","<br> ",N_HKE, ":N-HKE")) %>%
+      add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(year,":Year","<br> ",N_MEG, ":N-MEG")) %>%
+      add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(year,":Year","<br> ",SOL_7E, ":SOL-7E")) %>%
+      add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(year,":Year","<br> ",SOL_7FG, ":SOL-7FG")) %>%
+      add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(year,":Year","<br> ",WHG_CS, ":WHG-CS")) %>%
+      add_trace(y = ~Geometric_Mean, name = "Geom_Mean", text = ~ paste(year,":Year","<br> ",Geometric_Mean, ":Geom_Mean"),line=list(width = 8, dash = 'dot',color="black")) %>%
+      add_trace(y = ~Mean, name = "Mean", text = ~ paste(year,":Year","<br> ",Mean, ":Mean"),line=list(width = 8, dash = 'dash',color="gray")) %>%
       layout(yaxis = list(title = " Fbar"), xaxis = list(title = ""), legend = list(x = 0, y = 1.2)) %>%
       config(displayModeBar = F) %>%
       layout(height = 350)
@@ -1762,20 +1932,27 @@ server <- function(input, output, session) {
     dataForstock1 <- dataForstock %>% filter(type == "ssb")
     stock_year <- aggregate(data ~ year + Stock, data = dataForstock1, FUN = sum)
     stock_year_wide <- cast(stock_year, year ~ Stock, sum)
+    stock_year_wide$Geometric_Mean<-rep(NA,dim(stock_year_wide)[1])
+    stock_year_wide$Mean<-rep(NA,dim(stock_year_wide)[1])
+    for(i in 1:dim(stock_year_wide)[1]){stock_year_wide$Geometric_Mean[i]<-geometric.mean(as.numeric(stock_year_wide[-1][i,]))
+    stock_year_wide$Mean[i]<-mean(as.numeric(stock_year_wide[-1][i,]),na.rm = TRUE)}
     output$StockStatus <- renderPlotly({
       p <- plot_ly(stock_year_wide,
-                   x = ~year, y = ~COD_CS, type = "scatter",mode = "lines+markers", name = "COD-CS",
-                   text = ~ paste(COD_CS, ":COD-CS"), hoverinfo = "text"
+                   x = ~year, y = ~COD_CS, type = "scatter",mode = "lines", name = "COD-CS",
+                   text = ~ paste(year,"Year","<br> ",COD_CS, ":COD-CS"), hoverinfo = "text"
       ) %>%
-        add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(HAD_CS, ":HAD-CS")) %>%
-        add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(MON_CS, ":MON-CS")) %>%
-        add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(N_HKE, ":N-HKE")) %>%
-        add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(N_MEG, ":N-MEG")) %>%
-        add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(SOL_7E, ":SOL-7E")) %>%
-        add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(SOL_7FG, ":SOL-7FG")) %>%
-        add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(WHG_CS, ":WHG-CS")) %>%
+        add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(year,":Year","<br> ",HAD_CS, ":HAD-CS")) %>%
+        add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(year,":Year","<br> ",MON_CS, ":MON-CS")) %>%
+        add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(year,":Year","<br> ",N_HKE, ":N-HKE")) %>%
+        add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(year,":Year","<br> ",N_MEG, ":N-MEG")) %>%
+        add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(year,":Year","<br> ",SOL_7E, ":SOL-7E")) %>%
+        add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(year,":Year","<br> ",SOL_7FG, ":SOL-7FG")) %>%
+        add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(year,":Year","<br> ",WHG_CS, ":WHG-CS")) %>%
+        add_trace(y = ~Geometric_Mean, name = "Geom_Mean", text = ~ paste(year,":Year","<br> ",Geometric_Mean, ":Geom_Mean"),line=list(width = 8, dash = 'dot',color="black")) %>%
+        add_trace(y = ~Mean, name = "Mean", text = ~ paste(year,":Year","<br> ",Mean, ":Mean"),line=list(width = 8, dash = 'dash',color="gray")) %>%
         layout(yaxis = list(title = " SSB"), xaxis = list(title = ""), legend = list(x = 0.06, y = 0.98)) %>%
-        config(displayModeBar = F) 
+        config(displayModeBar = F) %>%
+        layout(height = 350)
       p
     })
     output$Advice <- renderPlotly({
@@ -1804,20 +1981,26 @@ server <- function(input, output, session) {
     dataForstock1 <- dataForstock %>% filter(type == "fbar")
     stock_year <- aggregate(data ~ year + Stock, data = dataForstock1, FUN = sum)
     stock_year_wide <- cast(stock_year, year ~ Stock, sum)
+    stock_year_wide$Geometric_Mean<-rep(NA,dim(stock_year_wide)[1])
+    stock_year_wide$Mean<-rep(NA,dim(stock_year_wide)[1])
+    for(i in 1:dim(stock_year_wide)[1]){stock_year_wide$Geometric_Mean[i]<-geometric.mean(as.numeric(stock_year_wide[-1][i,]))
+    stock_year_wide$Mean[i]<-mean(as.numeric(stock_year_wide[-1][i,]),na.rm = TRUE)}
     output$StockStatus <- renderPlotly({
       p <- plot_ly(stock_year_wide,
-                   x = ~year, y = ~COD_CS,type = "scatter",mode = "lines+markers" , name = "COD-CS",
-                   text = ~ paste(COD_CS, ":COD-CS"), hoverinfo = "text"
+                   x = ~year, y = ~COD_CS,type = "scatter",mode = "lines" , name = "COD-CS",
+                   text = ~ paste(year,":Year","<br> ",COD_CS, ":COD-CS"), hoverinfo = "text"
       ) %>%
-        add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(HAD_CS, ":HAD-CS")) %>%
-        add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(MON_CS, ":MON-CS")) %>%
-        add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(N_HKE, ":N-HKE")) %>%
-        add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(N_MEG, ":N-MEG")) %>%
-        add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(SOL_7E, ":SOL-7E")) %>%
-        add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(SOL_7FG, ":SOL-7FG")) %>%
-        add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(WHG_CS, ":WHG-CS")) %>%
+        add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(year,":Year","<br> ",HAD_CS, ":HAD-CS")) %>%
+        add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(year,":Year","<br> ",MON_CS, ":MON-CS")) %>%
+        add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(year,":Year","<br> ",N_HKE, ":N-HKE")) %>%
+        add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(year,":Year","<br> ",N_MEG, ":N-MEG")) %>%
+        add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(year,":Year","<br> ",SOL_7E, ":SOL-7E")) %>%
+        add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(year,":Year","<br> ",SOL_7FG, ":SOL-7FG")) %>%
+        add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(year,":Year","<br> ",WHG_CS, ":WHG-CS")) %>%
+        add_trace(y = ~Geometric_Mean, name = "Geom_Mean", text = ~ paste(year,":Year","<br> ",Geometric_Mean, ":Geom_Mean"),line=list(width = 8, dash = 'dot',color="black")) %>%
+        add_trace(y = ~Mean, name = "Mean", text = ~ paste(year,":Year","<br> ",Mean, ":Mean"),line=list(width = 8, dash = 'dash',color="gray")) %>%
         layout(yaxis = list(title = " Fbar"), xaxis = list(title = ""), legend = list(x = 0, y = 1.20)) %>%
-        config(displayModeBar = F) 
+        config(displayModeBar = F)
       p
     })
     output$Advice <- renderPlotly({
@@ -1844,18 +2027,24 @@ server <- function(input, output, session) {
     dataForstock1 <- dataForstock %>% filter(type == "catch")
     stock_year <- aggregate(data ~ year + Stock, data = dataForstock1, FUN = sum)
     stock_year_wide <- cast(stock_year, year ~ Stock, sum)
+    stock_year_wide$Geometric_Mean<-rep(NA,dim(stock_year_wide)[1])
+    stock_year_wide$Mean<-rep(NA,dim(stock_year_wide)[1])
+    for(i in 1:dim(stock_year_wide)[1]){stock_year_wide$Geometric_Mean[i]<-geometric.mean(as.numeric(stock_year_wide[-1][i,]))
+    stock_year_wide$Mean[i]<-mean(as.numeric(stock_year_wide[-1][i,]),na.rm = TRUE)}
     output$StockStatus <- renderPlotly({
       p <- plot_ly(stock_year_wide,
-                   x = ~year, y = ~COD_CS,type = "scatter",mode = "lines+markers" , name = "COD-CS",
-                   text = ~ paste(COD_CS, ":COD-CS"), hoverinfo = "text"
+                   x = ~year, y = ~COD_CS,type = "scatter",mode = "lines" , name = "COD-CS",
+                   text = ~ paste(year,":Year","<br> ",COD_CS, ":COD-CS"), hoverinfo = "text"
       ) %>%
-        add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(HAD_CS, ":HAD-CS")) %>%
-        add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(MON_CS, ":MON-CS")) %>%
-        add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(N_HKE, ":N-HKE")) %>%
-        add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(N_MEG, ":N-MEG")) %>%
-        add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(SOL_7E, ":SOL-7E")) %>%
-        add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(SOL_7FG, ":SOL-7FG")) %>%
-        add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(WHG_CS, ":WHG-CS")) %>%
+        add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(year,":Year","<br> ",HAD_CS, ":HAD-CS")) %>%
+        add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(year,":Year","<br> ",MON_CS, ":MON-CS")) %>%
+        add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(year,":Year","<br> ",N_HKE, ":N-HKE")) %>%
+        add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(year,":Year","<br> ",N_MEG, ":N-MEG")) %>%
+        add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(year,":Year","<br> ",SOL_7E, ":SOL-7E")) %>%
+        add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(year,":Year","<br> ",SOL_7FG, ":SOL-7FG")) %>%
+        add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(year,":Year","<br> ",WHG_CS, ":WHG-CS")) %>%
+        add_trace(y = ~Geometric_Mean, name = "Geom_Mean", text = ~ paste(year,":Year","<br> ",Geometric_Mean, ":Geom_Mean"),line=list(width = 8, dash = 'dot',color="black")) %>%
+        add_trace(y = ~Mean, name = "Mean", text = ~ paste(year,":Year","<br> ",Mean, ":Mean"),line=list(width = 8, dash = 'dash',color="gray")) %>%
         layout(yaxis = list(title = " Catch"), xaxis = list(title = ""), legend = list(x = 0.06, y = 0.98)) %>%
         config(displayModeBar = F)
       p
@@ -1913,18 +2102,24 @@ server <- function(input, output, session) {
     dataForstock1 <- dataForstock %>% filter(type == "landings")
     stock_year <- aggregate(data ~ year + Stock, data = dataForstock1, FUN = sum)
     stock_year_wide <- cast(stock_year, year ~ Stock, sum)
+    stock_year_wide$Geometric_Mean<-rep(NA,dim(stock_year_wide)[1])
+    stock_year_wide$Mean<-rep(NA,dim(stock_year_wide)[1])
+    for(i in 1:dim(stock_year_wide)[1]){stock_year_wide$Geometric_Mean[i]<-geometric.mean(as.numeric(stock_year_wide[-1][i,]))
+    stock_year_wide$Mean[i]<-mean(as.numeric(stock_year_wide[-1][i,]),na.rm = TRUE)}
     output$StockStatus <- renderPlotly({
       p <- plot_ly(stock_year_wide,
-                   x = ~year, y = ~COD_CS, type = "scatter",mode = "lines+markers", name = "COD-CS",
-                   text = ~ paste(COD_CS, ":COD-CS"), hoverinfo = "text"
+                   x = ~year, y = ~COD_CS,type = "scatter",mode = "lines" , name = "COD-CS",
+                   text = ~ paste(year,":Year","<br> ",COD_CS, ":COD-CS"), hoverinfo = "text"
       ) %>%
-        add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(HAD_CS, ":HAD-CS")) %>%
-        add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(MON_CS, ":MON-CS")) %>%
-        add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(N_HKE, ":N-HKE")) %>%
-        add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(N_MEG, ":N-MEG")) %>%
-        add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(SOL_7E, ":SOL-7E")) %>%
-        add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(SOL_7FG, ":SOL-7FG")) %>%
-        add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(WHG_CS, ":WHG-CS")) %>%
+        add_trace(y = ~HAD_CS, name = "HAD-CS", text = ~ paste(year,":Year","<br> ",HAD_CS, ":HAD-CS")) %>%
+        add_trace(y = ~MON_CS, name = "MON-CS", text = ~ paste(year,":Year","<br> ",MON_CS, ":MON-CS")) %>%
+        add_trace(y = ~N_HKE, name = "N-HKE", text = ~ paste(year,":Year","<br> ",N_HKE, ":N-HKE")) %>%
+        add_trace(y = ~N_MEG, name = "N-MEG", text = ~ paste(year,":Year","<br> ",N_MEG, ":N-MEG")) %>%
+        add_trace(y = ~SOL_7E, name = "SOL-7E", text = ~ paste(year,":Year","<br> ",SOL_7E, ":SOL-7E")) %>%
+        add_trace(y = ~SOL_7FG, name = "SOL-7FG", text = ~ paste(year,":Year","<br> ",SOL_7FG, ":SOL-7FG")) %>%
+        add_trace(y = ~WHG_CS, name = "WHG-CS", text = ~ paste(year,":Year","<br> ",WHG_CS, ":WHG-CS")) %>%
+        add_trace(y = ~Geometric_Mean, name = "Geom_Mean", text = ~ paste(year,":Year","<br> ",Geometric_Mean, ":Geom_Mean"),line=list(width = 8, dash = 'dot',color="black")) %>%
+        add_trace(y = ~Mean, name = "Mean", text = ~ paste(year,":Year","<br> ",Mean, ":Mean"),line=list(width = 8, dash = 'dash',color="gray")) %>%
         layout(yaxis = list(title = " Landings"), xaxis = list(title = ""), legend = list(x = 0.06, y = 0.98)) %>%
         config(displayModeBar = F) 
       p
@@ -1944,6 +2139,7 @@ server <- function(input, output, session) {
       p
     })
   })
+  
   
   
   ######FCube######
@@ -1999,7 +2195,6 @@ server <- function(input, output, session) {
   }
   
   ##page2##
-  
   radarP <- reactive({
     filter(shareW,country==input$filltype, stock == input$FCShare)
   })
@@ -2009,16 +2204,16 @@ server <- function(input, output, session) {
       plot_ly(
         type = "scatterpolar",
         # mode = "lines+markers",
-        r= filter(radarP(),scenario!="baseline")$share,
+        r= filter(radarP(),scenario=="baseline")$share,
         theta = levels(shareW$scenario)[-1],
-        fill = "toself",
-        name=paste(input$filltype,":2019"),marker = list(size = 11)
-      )%>%
-        add_trace(r= filter(radarP(),scenario=="baseline")$share,
+        # fill="tozeroy",
+        fill="toself",
+        name = paste(input$filltype,":2017"),
+        marker = list(size = 12)) %>%
+        add_trace(r= filter(radarP(),scenario!="baseline")$share,
                   theta = levels(shareW$scenario)[-1],
-                  fill="tozeroy",
-                  name = paste(input$filltype,":2017"),
-                  marker = list(size = 12, color = "red"))%>%layout(showlegend=T) 
+                  fill = "toself",
+                  name=paste(input$filltype,":2019"),marker = list(size = 11))%>%layout(showlegend=T) 
       
     })
   
@@ -2035,7 +2230,168 @@ server <- function(input, output, session) {
   
   ######### Plot effort fleet by scenario######
   
+  #####Circular barplot######
   
+  
+  output$FCEfSbarplot<-renderPlot({
+    if(input$FCEfSbarPlot==1){
+      t1 <- filter(effbymet,scenario == input$FCEfSbar)
+      t1<-t1[c(10,11,5,8)]
+      t1$efmet <-log(t1$efmet)
+      wide<-spread(t1, metier, efmet)
+      widet1 <- gather(wide,key = "metier", value="Effort", -c(1,2))
+      data<-widet1 
+      empty_bar=3
+      nObsType=nlevels(as.factor(data$metier))
+      to_add = data.frame( matrix(NA, empty_bar*nlevels(data$Country)*nObsType, ncol(data)) )
+      colnames(to_add) = colnames(data)
+      to_add$Country=rep(levels(data$Country), each=empty_bar*nObsType )
+      data=rbind(data, to_add)
+      data=data %>% arrange(Country, Fleet)
+      data$id=rep( seq(1, nrow(data)/nObsType) , each=nObsType)
+      
+      label_data= data %>% group_by(id, Fleet) %>% summarize(tot=sum(Effort,na.rm=TRUE))
+      number_of_bar=nrow(label_data)
+      angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+      label_data$hjust<-ifelse( angle < -90, 1, 0)
+      label_data$angle<-ifelse(angle < -90, angle+180, angle)
+      
+      # prepare a data frame for base lines
+      base_data=data %>% 
+        group_by(Country) %>% 
+        summarize(start=min(id), end=max(id) - empty_bar) %>% 
+        rowwise() %>% 
+        mutate(title=mean(c(start, end)))
+      
+      # prepare a data frame for grid (scales)
+      grid_data = base_data
+      grid_data$end = grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
+      grid_data$start = grid_data$start - 1
+      grid_data=grid_data[-1,]
+      
+      
+      ggplot(data) +      
+        
+        # Add the stacked bar
+        geom_bar(aes(x=as.factor(id), y=Effort, fill=metier), stat="identity", alpha=0.5) +
+        scale_fill_manual(values=c("#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99"))+
+        #scale_fill_viridis(discrete=TRUE) +
+        
+        # Add a val=100/75/50/25 lines. I do it at the beginning to make sur barplots are OVER it.
+        geom_segment(data=grid_data, aes(x = end, y = 0, xend = start, yend = 0), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        geom_segment(data=grid_data, aes(x = end, y = 5, xend = start, yend = 5), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        geom_segment(data=grid_data, aes(x = end, y = 10, xend = start, yend = 10), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        
+        
+        # Add text showing the value of each 100/75/50/25 lines
+        annotate("text", x = rep(max(data$id),3), y = c(0,5, 10), label = c("0", "5", "10") , color="grey", size=5 , angle=0, fontface="bold", hjust=1) +
+        ylim(-15,max(label_data$tot, na.rm=T)+20) +
+        #theme_minimal() +
+        theme(
+          legend.position = "left",
+          legend.text = element_text(size=15),
+          #legend.margin=margin(0,-20,62,0),
+          legend.box.margin = margin(10,10,10,10),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          panel.grid = element_blank(),
+          # plot.margin = unit(rep(-7,4), "cm") 
+          plot.margin = unit(c(-4,-4,-4,-4) ,"cm") 
+        ) +
+        coord_polar() +
+        # Add labels on top of each bar
+        geom_text(data=label_data, aes(x=id, y=tot+1, label=Fleet, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=5, angle= label_data$angle, inherit.aes = FALSE ) +
+        
+        # Add base line information
+        geom_segment(data=base_data, aes(x = start, y = -0.5, xend = end, yend = -0.5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )   +
+        geom_text(data=base_data, aes(x = title, y = -1, label=Country), hjust=c(0.5,1,0.5,0,0.5), 
+                  vjust=c(0.5,0.5,0,0.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)}
+    else{
+      t1 <- filter(effbymet,scenario == input$FCEfSbar)
+      t1<-t1[c(10,11,5,8)]
+      #t1$efmet <-log(t1$efmet)
+      wide<-spread(t1, metier, efmet)
+      
+      
+      wideP<-matrix(NA,nrow = 20,ncol=11)
+      for(i in 1:20){
+        wideP[i,]<-as.numeric(wide[-c(1,2)][i,]/sum(wide[-c(1,2)][i,],na.rm=T))}
+      t<-cbind(wide[c(1,2)],as.data.frame(wideP))
+      names(t)<-names(wide)
+      
+      #widet1 <- gather(wide,key = "metier", value="Effort", -c(1,2))
+      widet <- gather(t,key = "metier", value="Effort", -c(1,2))
+      data<-widet
+      empty_bar=3
+      nObsType=nlevels(as.factor(data$metier))
+      to_add = data.frame( matrix(NA, empty_bar*nlevels(data$Country)*nObsType, ncol(data)) )
+      colnames(to_add) = colnames(data)
+      to_add$Country=rep(levels(data$Country), each=empty_bar*nObsType )
+      data=rbind(data, to_add)
+      data=data %>% arrange(Country, Fleet)
+      data$id=rep( seq(1, nrow(data)/nObsType) , each=nObsType)
+      
+      label_data= data %>% group_by(id, Fleet) %>% summarize(tot=sum(Effort,na.rm=TRUE))
+      number_of_bar=nrow(label_data)
+      angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+      label_data$hjust<-ifelse( angle < -90, 1, 0)
+      label_data$angle<-ifelse(angle < -90, angle+180, angle)
+      
+      # prepare a data frame for base lines
+      base_data=data %>% 
+        group_by(Country) %>% 
+        summarize(start=min(id), end=max(id) - empty_bar) %>% 
+        rowwise() %>% 
+        mutate(title=mean(c(start, end)))
+      
+      # prepare a data frame for grid (scales)
+      grid_data = base_data
+      grid_data$end = grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
+      grid_data$start = grid_data$start - 1
+      grid_data=grid_data[-1,]
+      
+      
+      ggplot(data) +      
+        
+        # Add the stacked bar
+        geom_bar(aes(x=as.factor(id), y=Effort*10, fill=metier), stat="identity", alpha=0.5) +
+        scale_fill_manual(values=c("#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99"))+
+        #scale_fill_viridis(discrete=TRUE) +
+        
+        # Add a val=100/75/50/25 lines. I do it at the beginning to make sur barplots are OVER it.
+        geom_segment(data=grid_data, aes(x = end, y = 0, xend = start, yend = 0), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        geom_segment(data=grid_data, aes(x = end, y = 5, xend = start, yend = 5), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        geom_segment(data=grid_data, aes(x = end, y = 10, xend = start, yend = 10), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        
+        
+        # Add text showing the value of each 100/75/50/25 lines
+        annotate("text", x = rep(max(data$id),3), y = c(0,5, 10), label = c("0", "50%", "100%") , color="grey", size=5 , angle=0, fontface="bold", hjust=1) +
+        ylim(-5,max(label_data$tot, na.rm=T)+30) +
+        #theme_minimal() +
+        theme(
+          legend.position = "left",
+          legend.text = element_text(size=15),
+          #legend.margin=margin(0,-20,62,0),
+          legend.box.margin = margin(10,10,10,10),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          panel.grid = element_blank(),
+          # plot.margin = unit(rep(-7,4), "cm") 
+          plot.margin = unit(c(-8,-8,-8,-8) ,"cm") 
+        ) +
+        coord_polar() +
+        # Add labels on top of each bar
+        geom_text(data=label_data, aes(x=id, y=tot*10, label=Fleet, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=5, angle= label_data$angle, inherit.aes = FALSE ) +
+        
+        # Add base line information
+        geom_segment(data=base_data, aes(x = start, y = -0.5, xend = end, yend = -0.5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )   +
+        geom_text(data=base_data, aes(x = title, y = -1, label=Country), hjust=c(0.5,1,0.5,0,0.5), 
+                  vjust=c(0.5,0.5,0,0.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)}
+    
+  })
+  
+  
+  #######Barplot#####
   efbyscenario <- reactive({
     filter(effbymet, fleet == input$FCEscen)# & scenario == input$fillScenario)
   })
@@ -2050,18 +2406,6 @@ server <- function(input, output, session) {
         layout(showticklabels = TRUE, showlegend = T,barmode="stack", yaxis = list(title = "Effort ('000 kwdays)"))
       p
     })
-  
-  
-  
-  
-  
-  # output$EscenWtable <- function() {
-  # text_tbl <- efbyscenario()[-c(1, 2, 8,9)]
-  #  names(text_tbl)<-c('Scenario','Belgium','England','France','Ireland','Others','Spain')
-  #text_tbl %>%
-  #  knitr::kable("html") %>%
-  #  kable_styling(full_width = F, font_size = 16)
-  # }
   
   
   
@@ -2088,7 +2432,7 @@ server <- function(input, output, session) {
   })
   output$fleetbystock <- function() {
     text_tbl <-  tabeffbys()[-c(1,7)]
-    names(text_tbl)<-c('Fleet','Max','Unchoke','Min','Choke')
+    names(text_tbl)<-c('Fleet','Max','Unchoked Stock','Min','Choked Stock')
     text_tbl %>%
       knitr::kable("html") %>%
       kable_styling(full_width = F, font_size = 16)
@@ -3148,14 +3492,7 @@ tabPanel("Scenarios: Celtic Sea",
                               )
                             ),
                             conditionalPanel(
-                              condition = "input.EfFilter == 2",
-                              div(
-                                style = "border-radius: 25px,width:120px;color:orange",
-                                selectInput("FCEscen",
-                                            label = "Select Fleet", choices = levels(effbymet$fleet),
-                                            selectize = T
-                                )
-                              )
+                              condition = "input.EfFilter == 2"
                             ),
                             conditionalPanel(
                               condition = "input.EfFilter == 3",
@@ -3174,30 +3511,45 @@ tabPanel("Scenarios: Celtic Sea",
                               )
                             ),
                             conditionalPanel(
-                              condition = "input.EfFilter == 2")
+                            condition = "input.EfFilter == 2")
                             ,
                             conditionalPanel(condition = "input.EfFilter == 3")
                           )
                         ),
                         fluidRow(
-                          conditionalPanel(
+                        conditionalPanel(
                             condition = "input.EfFilter == 1",
                             column(width = 5, h5("Relative share of species' landings by country in 2019 scenarios compared to the 2017 (baseline)", style = "margin-bottom=125px;text-align:center;
                                                  font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("radrarS")), column(width = 6, tableOutput("shareWtable"))
-                            ),
-                          conditionalPanel(
-                            condition = "input.EfFilter == 2",
-                            column(width = 12, h5("Effort by fleet and metier  for 2017(baseline) and estimates for various scenarios in 2019.", style = "margin-bottom=125px;text-align:center;
-                                                  font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("plotFleetScenario", height = 600))
-                            #,
-                            #column(width = 4, tableOutput("EscenWtable"))
-                            ),
+                            ),conditionalPanel(
+                              condition = "input.EfFilter == 2",
+                              column(width = 12, h5("Effort by fleet and metier  for 2017(baseline) and estimates for various scenarios in 2019.", style = "margin-bottom=125px;text-align:center;
+                                                    font-weight:bold;color:orange;text-decoration: underline;"),br(),
+                                     fluidRow(column(3, div(
+                                       style = "border-radius: 25px,width:120px;color:orange",
+                                       selectInput("FCEfSbarPlot", label = "Select Scale", choices = c("Log Scale"=1,"Percentages"=2), selectize = T)
+                                     ) ),
+                                     column(3, div(
+                                       style = "border-radius: 25px,width:120px;color:orange",
+                                       selectInput("FCEfSbar", label = "Select Scenario", levels(effbymet$scenario), selectize = T))))
+                                     ,br(),plotOutput("FCEfSbarplot",height = 800),
+                                     div(
+                                       style = "border-radius: 25px,width:120px;color:orange",
+                                       selectInput("FCEscen",
+                                                   label = "Select Flteet", choices = levels(effbymet$fleet),
+                                                   selectize = T
+                                       )
+                                       
+                                     ), plotlyOutput("plotFleetScenario", height = 600))
+                              #,
+                              #column(width = 4, tableOutput("EscenWtable"))
+                              ),
                           conditionalPanel(condition = "input.EfFilter == 3", column(width = 7, h5("Estimates of Effort by fleet corresponding to the individual quota share by fish stock in 2019", style = "margin-bottom=125px;text-align:center;
                                                                                                    font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("plotFleetbyStock", height = 600)),
-                                           column(width = 5,  div(style = " border-radius: 5px;background-color:grey ;",
-                                                                  tableOutput("fleetbystock")))
-                          )
-                      )),   tabPanel("Page 3", fluidRow(
+                           column(width = 5,  div(style = " border-radius: 5px;background-color:grey ;",
+                           tableOutput("fleetbystock")))
+                           )
+                      )), tabPanel("Page 3", fluidRow(
                         column(
                           3, prettyRadioButtons("FCubeFilter",
                                                 label = "", thick = T, animation = "pulse",
