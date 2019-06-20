@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 library(shiny)
 library(shinythemes)
 library(shinyalert)
@@ -19,6 +19,7 @@ library(shinyWidgets)
 library(googlesheets)
 library(reshape2)
 library(psych)
+library(grid)
 #library(vmstools)
 options(scipen=999)
 
@@ -2234,9 +2235,9 @@ server <- function(input, output, session) {
   #####Circular barplot######
   
   
-  output$FCEfSbarplot<-renderPlot({
+  output$FCEfSbarplot1<-renderPlot({
     if(input$FCEfSbarPlot==1){
-      t1 <- filter(effbymet,scenario == input$FCEfSbar)
+      t1 <- filter(effbymet,scenario == input$FCEfSbar1)
       t1<-t1[c(10,11,5,8)]
       t1$efmet <-log(t1$efmet)
       wide<-spread(t1, metier, efmet)
@@ -2286,29 +2287,29 @@ server <- function(input, output, session) {
         
         # Add text showing the value of each 100/75/50/25 lines
         annotate("text", x = rep(max(data$id),3), y = c(0,5, 10), label = c("0", "5", "10") , color="grey", size=5 , angle=0, fontface="bold", hjust=1) +
-        ylim(-15,max(label_data$tot, na.rm=T)+20) +
-        #theme_minimal() +
+        ylim(-10,max(label_data$tot, na.rm=T)+1) +
+        theme_minimal() +
         theme(
           legend.position = "left",
-          legend.text = element_text(size=15),
-          #legend.margin=margin(0,-20,62,0),
-          legend.box.margin = margin(10,10,10,10),
+          legend.text = element_text(size=10),
+          legend.margin=margin(0,-200,300,0),
+          #legend.box.margin = margin(10,10,10,10),
           axis.text = element_blank(),
           axis.title = element_blank(),
           panel.grid = element_blank(),
-          # plot.margin = unit(rep(-7,4), "cm") 
-          plot.margin = unit(c(-4,-4,-4,-4) ,"cm") 
+          #plot.margin =  margin(0,0,0,0)
+          plot.margin = unit(c(-4,-6,0,-1) ,"cm") 
         ) +
         coord_polar() +
         # Add labels on top of each bar
-        geom_text(data=label_data, aes(x=id, y=tot+1, label=Fleet, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=5, angle= label_data$angle, inherit.aes = FALSE ) +
+        geom_text(data=label_data, aes(x=id, y=tot+1, label=Fleet, hjust=hjust), color="black", fontface="bold", size=4, angle= label_data$angle, inherit.aes = FALSE ) +
         
         # Add base line information
         geom_segment(data=base_data, aes(x = start, y = -0.5, xend = end, yend = -0.5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )   +
         geom_text(data=base_data, aes(x = title, y = -1, label=Country), hjust=c(0.5,1,0.5,0,0.5), 
                   vjust=c(0.5,0.5,0,0.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)}
     else{
-      t1 <- filter(effbymet,scenario == input$FCEfSbar)
+      t1 <- filter(effbymet,scenario == input$FCEfSbar1)
       t1<-t1[c(10,11,5,8)]
       #t1$efmet <-log(t1$efmet)
       wide<-spread(t1, metier, efmet)
@@ -2367,22 +2368,21 @@ server <- function(input, output, session) {
         
         # Add text showing the value of each 100/75/50/25 lines
         annotate("text", x = rep(max(data$id),3), y = c(0,5, 10), label = c("0", "50%", "100%") , color="grey", size=5 , angle=0, fontface="bold", hjust=1) +
-        ylim(-5,max(label_data$tot, na.rm=T)+30) +
-        #theme_minimal() +
+        ylim(-5,max(label_data$tot, na.rm=T)+20) +
+        theme_minimal() +
         theme(
           legend.position = "left",
-          legend.text = element_text(size=15),
-          #legend.margin=margin(0,-20,62,0),
+          legend.text = element_text(size=10),
+          legend.margin=margin(0,-200,425,0),
           legend.box.margin = margin(10,10,10,10),
           axis.text = element_blank(),
           axis.title = element_blank(),
           panel.grid = element_blank(),
-          # plot.margin = unit(rep(-7,4), "cm") 
-          plot.margin = unit(c(-8,-8,-8,-8) ,"cm") 
+          plot.margin = unit(c(-4,-6,-1,-1), "cm")
         ) +
         coord_polar() +
         # Add labels on top of each bar
-        geom_text(data=label_data, aes(x=id, y=tot*10, label=Fleet, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=5, angle= label_data$angle, inherit.aes = FALSE ) +
+        geom_text(data=label_data, aes(x=id, y=tot*10, label=Fleet, hjust=hjust), color="black", fontface="bold", size=4, angle= label_data$angle, inherit.aes = FALSE ) +
         
         # Add base line information
         geom_segment(data=base_data, aes(x = start, y = -0.5, xend = end, yend = -0.5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )   +
@@ -2390,6 +2390,163 @@ server <- function(input, output, session) {
                   vjust=c(0.5,0.5,0,0.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)}
     
   })
+  
+  output$FCEfSbarplot2<-renderPlot({
+    if(input$FCEfSbarPlot==1){
+      t1 <- filter(effbymet,scenario == input$FCEfSbar2)
+      t1<-t1[c(10,11,5,8)]
+      t1$efmet <-log(t1$efmet)
+      wide<-spread(t1, metier, efmet)
+      widet1 <- gather(wide,key = "metier", value="Effort", -c(1,2))
+      data<-widet1 
+      empty_bar=3
+      nObsType=nlevels(as.factor(data$metier))
+      to_add = data.frame( matrix(NA, empty_bar*nlevels(data$Country)*nObsType, ncol(data)) )
+      colnames(to_add) = colnames(data)
+      to_add$Country=rep(levels(data$Country), each=empty_bar*nObsType )
+      data=rbind(data, to_add)
+      data=data %>% arrange(Country, Fleet)
+      data$id=rep( seq(1, nrow(data)/nObsType) , each=nObsType)
+      
+      label_data= data %>% group_by(id, Fleet) %>% summarize(tot=sum(Effort,na.rm=TRUE))
+      number_of_bar=nrow(label_data)
+      angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+      label_data$hjust<-ifelse( angle < -90, 1, 0)
+      label_data$angle<-ifelse(angle < -90, angle+180, angle)
+      
+      # prepare a data frame for base lines
+      base_data=data %>% 
+        group_by(Country) %>% 
+        summarize(start=min(id), end=max(id) - empty_bar) %>% 
+        rowwise() %>% 
+        mutate(title=mean(c(start, end)))
+      
+      # prepare a data frame for grid (scales)
+      grid_data = base_data
+      grid_data$end = grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
+      grid_data$start = grid_data$start - 1
+      grid_data=grid_data[-1,]
+      
+      
+      ggplot(data) +      
+        
+        # Add the stacked bar
+        geom_bar(aes(x=as.factor(id), y=Effort, fill=metier), stat="identity", alpha=0.5) +
+        scale_fill_manual(values=c("#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99"))+
+        #scale_fill_viridis(discrete=TRUE) +
+        
+        # Add a val=100/75/50/25 lines. I do it at the beginning to make sur barplots are OVER it.
+        geom_segment(data=grid_data, aes(x = end, y = 0, xend = start, yend = 0), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        geom_segment(data=grid_data, aes(x = end, y = 5, xend = start, yend = 5), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        geom_segment(data=grid_data, aes(x = end, y = 10, xend = start, yend = 10), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        
+        
+        # Add text showing the value of each 100/75/50/25 lines
+        annotate("text", x = rep(max(data$id),3), y = c(0,5, 10), label = c("0", "5", "10") , color="grey", size=5 , angle=0, fontface="bold", hjust=1) +
+        ylim(-10,max(label_data$tot, na.rm=T)+1) +
+        theme_minimal() +
+        theme(
+          legend.position = "left",
+          legend.text = element_text(size=10),
+          legend.margin=margin(0,-200,300,0),
+          #legend.box.margin = margin(10,10,10,10),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          panel.grid = element_blank(),
+          #plot.margin =  margin(0,0,0,0)
+          plot.margin = unit(c(-4,-6,0,-1) ,"cm") 
+        ) +
+        coord_polar() +
+        # Add labels on top of each bar
+        geom_text(data=label_data, aes(x=id, y=tot+1, label=Fleet, hjust=hjust), color="black", fontface="bold", size=4, angle= label_data$angle, inherit.aes = FALSE ) +
+        
+        # Add base line information
+        geom_segment(data=base_data, aes(x = start, y = -0.5, xend = end, yend = -0.5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )   +
+        geom_text(data=base_data, aes(x = title, y = -1, label=Country), hjust=c(0.5,1,0.5,0,0.5), 
+                  vjust=c(0.5,0.5,0,0.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)}
+    else{
+      t1 <- filter(effbymet,scenario == input$FCEfSbar2)
+      t1<-t1[c(10,11,5,8)]
+      #t1$efmet <-log(t1$efmet)
+      wide<-spread(t1, metier, efmet)
+      
+      
+      wideP<-matrix(NA,nrow = 20,ncol=11)
+      for(i in 1:20){
+        wideP[i,]<-as.numeric(wide[-c(1,2)][i,]/sum(wide[-c(1,2)][i,],na.rm=T))}
+      t<-cbind(wide[c(1,2)],as.data.frame(wideP))
+      names(t)<-names(wide)
+      
+      #widet1 <- gather(wide,key = "metier", value="Effort", -c(1,2))
+      widet <- gather(t,key = "metier", value="Effort", -c(1,2))
+      data<-widet
+      empty_bar=3
+      nObsType=nlevels(as.factor(data$metier))
+      to_add = data.frame( matrix(NA, empty_bar*nlevels(data$Country)*nObsType, ncol(data)) )
+      colnames(to_add) = colnames(data)
+      to_add$Country=rep(levels(data$Country), each=empty_bar*nObsType )
+      data=rbind(data, to_add)
+      data=data %>% arrange(Country, Fleet)
+      data$id=rep( seq(1, nrow(data)/nObsType) , each=nObsType)
+      
+      label_data= data %>% group_by(id, Fleet) %>% summarize(tot=sum(Effort,na.rm=TRUE))
+      number_of_bar=nrow(label_data)
+      angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+      label_data$hjust<-ifelse( angle < -90, 1, 0)
+      label_data$angle<-ifelse(angle < -90, angle+180, angle)
+      
+      # prepare a data frame for base lines
+      base_data=data %>% 
+        group_by(Country) %>% 
+        summarize(start=min(id), end=max(id) - empty_bar) %>% 
+        rowwise() %>% 
+        mutate(title=mean(c(start, end)))
+      
+      # prepare a data frame for grid (scales)
+      grid_data = base_data
+      grid_data$end = grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
+      grid_data$start = grid_data$start - 1
+      grid_data=grid_data[-1,]
+      
+      
+      ggplot(data) +      
+        
+        # Add the stacked bar
+        geom_bar(aes(x=as.factor(id), y=Effort*10, fill=metier), stat="identity", alpha=0.5) +
+        scale_fill_manual(values=c("#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99"))+
+        #scale_fill_viridis(discrete=TRUE) +
+        
+        # Add a val=100/75/50/25 lines. I do it at the beginning to make sur barplots are OVER it.
+        geom_segment(data=grid_data, aes(x = end, y = 0, xend = start, yend = 0), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        geom_segment(data=grid_data, aes(x = end, y = 5, xend = start, yend = 5), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        geom_segment(data=grid_data, aes(x = end, y = 10, xend = start, yend = 10), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+        
+        
+        # Add text showing the value of each 100/75/50/25 lines
+        annotate("text", x = rep(max(data$id),3), y = c(0,5, 10), label = c("0", "50%", "100%") , color="grey", size=5 , angle=0, fontface="bold", hjust=1) +
+        ylim(-5,max(label_data$tot, na.rm=T)+20) +
+        theme_minimal() +
+        theme(
+          legend.position = "left",
+          legend.text = element_text(size=10),
+          legend.margin=margin(0,-200,425,0),
+          legend.box.margin = margin(10,10,10,10),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          panel.grid = element_blank(),
+          plot.margin = unit(c(-4,-6,-1,-1), "cm")
+        ) +
+        coord_polar() +
+        # Add labels on top of each bar
+        geom_text(data=label_data, aes(x=id, y=tot*10, label=Fleet, hjust=hjust), color="black", fontface="bold", size=4, angle= label_data$angle, inherit.aes = FALSE ) +
+        
+        # Add base line information
+        geom_segment(data=base_data, aes(x = start, y = -0.5, xend = end, yend = -0.5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )   +
+        geom_text(data=base_data, aes(x = title, y = -1, label=Country), hjust=c(0.5,1,0.5,0,0.5), 
+                  vjust=c(0.5,0.5,0,0.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)}
+    
+  })
+  
   
   
   #######Barplot#####
@@ -2522,66 +2679,32 @@ server <- function(input, output, session) {
     p
   })
   
-  t3 <- filter(FCubepage3Radar, value == "landings")
+  #t3 <- filter(FCubepage3,stock==input$FCfilterpage31,value == "landings")
   
   output$FCubeRadarplot1 <-
+    
     renderPlotly({
+      t3 <- filter(FCubepage3,stock==input$FCfilterpage31,value == "landings")
       plot_ly(
         type = "scatterpolar",
-        # mode = 'lines',
-        # fill = "toself"
-        fill="tozeroy"
+         mode = 'lines',
+         fill = "toself"
+        #fill="tozeroy"
       ) %>%
         add_trace(
-          r = c(1, 1, 1, 1, 1, 1, 1, 1),
-          theta = c(levels(t3$sc), levels(t3$sc)[1]),
+          r = c(1, 1, 1, 1, 1, 1, 1),
+          theta = c("max", "min","cod-cs","had-cs","whg-cs","sq_E","val"),
           # fill="tozeroy",
           fill = "toself",
           name = "Ratio=1",
           lines = list(color = "red"),
-          marker = list(size = 14, color = "red",symbol=4)
-        ) %>%
-        add_trace(
-          r = t3$`COD-CS`,
-          theta = t3$sc,
-          name = "COD-CS", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t3$`HAD-CS`,
-          theta = t3$sc,
-          name = "HAD-CS", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t3$`MON-CS`,
-          theta = t3$sc,
-          name = "MON-CS", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t3$`N-HKE`,
-          theta = t3$sc,
-          name = "N-HKE", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t3$`N-MEG`,
-          theta = t3$sc,
-          name = "N-MEG", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t3$`SOL-7E`,
-          theta = t3$sc,
-          name = "sol-7E", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t3$`SOL-7FG`,
-          theta = t3$sc,
-          name = "SOL-7FG", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t3$`WHG-CS`,
-          theta = t3$sc,
-          name = "WHG-CS", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        layout(hovermode = "compare")
+          marker = list(size = 14, color = "red",symbol=4)) %>%
+        add_trace(r= t3$RelativeToSS,
+                  theta = c("max", "min","cod-cs","had-cs","whg-cs","sq_E","val")
+                  ,
+                  fill = "toself",
+                  name=paste(input$FCfilterpage31),marker = list(size = 11))%>%layout(showlegend=T) 
+     
     })
   
   output$FCubeOvershootrplot1<-renderPlotly({
@@ -2596,6 +2719,12 @@ server <- function(input, output, session) {
       list(h4("Prediction Relative to the Single Species Advice.",
               style = "font-weight:bold;color:orange;text-decoration: underline;"
       ),
+      div(
+        style = "border-radius: 25px,width:120px;color:orange",
+        selectInput("FCfilterpage31",
+                    label = "Select Stock", choices = levels(FCubepage3$stock),
+                    selectize = T
+        )),
       plotlyOutput("FCubeRadarplot1"),br(),
       h4("Stock overshoot and undershoot by scenarios.",
          style = "font-weight:bold;color:orange;text-decoration: underline;"
@@ -2697,66 +2826,33 @@ server <- function(input, output, session) {
     p
   })
   
-  t4 <- filter(FCubepage3Radar, value == "Fbar")
+ # t4 <- filter(FCubepage3Radar, value == "Fbar")
   
   output$FCubeRadarplot2 <-
     renderPlotly({
+      t3 <- filter(FCubepage3,stock==input$FCfilterpage32,value == "Fbar")
       plot_ly(
         type = "scatterpolar",
-        # mode = 'lines',
-        #fill = "toself"
-        fill="tozeroy"
+        mode = 'lines',
+        fill = "toself"
+        #fill="tozeroy"
       ) %>%
         add_trace(
-          r = c(1, 1, 1, 1, 1, 1, 1, 1),
-          theta = c(levels(t4$sc), levels(t4$sc)[1]),
+          r = c(1, 1, 1, 1, 1, 1, 1),
+          theta = c("max", "min","cod-cs","had-cs","whg-cs","sq_E","val"),
           # fill="tozeroy",
           fill = "toself",
           name = "Ratio=1",
           lines = list(color = "red"),
-          marker = list(size = 14, color = "red",symbol=4)
-        ) %>%
-        add_trace(
-          r = t4$`COD-CS`,
-          theta = t4$sc,
-          name = "COD-CS", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t4$`HAD-CS`,
-          theta = t4$sc,
-          name = "HAD-CS", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t4$`MON-CS`,
-          theta = t4$sc,
-          name = "MON-CS", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t4$`N-HKE`,
-          theta = t4$sc,
-          name = "N-HKE", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t4$`N-MEG`,
-          theta = t4$sc,
-          name = "N-MEG", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t4$`SOL-7E`,
-          theta = t4$sc,
-          name = "sol-7E", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t4$`SOL-7FG`,
-          theta = t4$sc,
-          name = "SOL-7FG", marker = list(size = 12)#, lines = list(color = "black")
-        ) %>%
-        add_trace(
-          r = t4$`WHG-CS`,
-          theta = t4$sc,
-          name = "WHG-CS", marker = list(size = 12)#, lines = list(color = "black")
-        )
+          marker = list(size = 14, color = "red",symbol=4)) %>%
+        add_trace(r= t3$RelativeToSS,
+                  theta = c("max", "min","cod-cs","had-cs","whg-cs","sq_E","val")
+                  ,
+                  fill = "toself",
+                  name=paste(input$FCfilterpage32),marker = list(size = 11))%>%layout(showlegend=T) 
+      
     })
+   
   
   output$FCubeOvershootrplot2<-renderPlotly({
     t31 <- filter(FCubepage3, value == "Fbar",sc==input$FCOver2)
@@ -2770,6 +2866,12 @@ server <- function(input, output, session) {
       h4("Prediction Relative to the Single Species Advice.",
          style = "font-weight:bold;color:orange;text-decoration: underline;"
       ),
+      div(
+        style = "border-radius: 25px,width:120px;color:orange",
+        selectInput("FCfilterpage32",
+                    label = "Select Stock", choices = levels(FCubepage3$stock),
+                    selectize = T
+        )),
       plotlyOutput("FCubeRadarplot2"),br(),
       h4("Stock overshoot and undershoot by scenarios.",
          style = "font-weight:bold;color:orange;text-decoration: underline;"
@@ -2878,120 +2980,51 @@ server <- function(input, output, session) {
     
     renderPlotly({
       if (input$SSEyear == 2019) {
-        t5 <- filter(FCubepage3Radar, value == "ssb" & year == 2019)
+        
+        t3 <- filter(FCubepage3,stock==input$FCfilterpage33,value == "ssb"& year == 2019)
         plot_ly(
           type = "scatterpolar",
-          # mode = 'lines',
-          #fill = "toself"
-          fill="tozeroy"
+          mode = 'lines',
+          fill = "toself"
+          #fill="tozeroy"
         ) %>%
           add_trace(
-            r = c(1, 1, 1, 1, 1, 1, 1, 1),
-            theta = c(levels(t4$sc), levels(t4$sc)[1]),
+            r = c(1, 1, 1, 1, 1, 1, 1),
+            theta = c("max", "min","cod-cs","had-cs","whg-cs","sq_E","val"),
             # fill="tozeroy",
             fill = "toself",
             name = "Ratio=1",
             lines = list(color = "red"),
-            marker = list(size = 14, color = "red",symbol=4)
-          ) %>%
-          add_trace(
-            r = t5$`COD-CS`,
-            theta = t5$sc,
-            name = "COD-CS", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`HAD-CS`,
-            theta = t5$sc,
-            name = "HAD-CS", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`MON-CS`,
-            theta = t5$sc,
-            name = "MON-CS", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`N-HKE`,
-            theta = t5$sc,
-            name = "N-HKE", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`N-MEG`,
-            theta = t5$sc,
-            name = "N-MEG", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`SOL-7E`,
-            theta = t5$sc,
-            name = "sol-7E", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`SOL-7FG`,
-            theta = t5$sc,
-            name = "SOL-7FG", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`WHG-CS`,
-            theta = t5$sc,
-            name = "WHG-CS", marker = list(size = 12)#, lines = list(color = "black")
-          )
+            marker = list(size = 14, color = "red",symbol=4)) %>%
+          add_trace(r= t3$RelativeToSS,
+                    theta = c("max", "min","cod-cs","had-cs","whg-cs","sq_E","val")
+                    ,
+                    fill = "toself",
+                    name=paste(input$FCfilterpage33),marker = list(size = 11))%>%layout(showlegend=T) 
+        
       }
       else if (input$SSEyear == 2020) {
-        t5 <- filter(FCubepage3Radar, value == "ssb" & year == 2020)
+        
+        t3 <- filter(FCubepage3,stock==input$FCfilterpage33,value == "ssb"& year == 2020)
         plot_ly(
           type = "scatterpolar",
-          # mode = 'lines',
-          #fill = "toself"
-          fill="tozeroy"
+          mode = 'lines',
+          fill = "toself"
+          #fill="tozeroy"
         ) %>%
           add_trace(
-            r = c(1, 1, 1, 1, 1, 1, 1, 1),
-            theta = c(levels(t4$sc), levels(t4$sc)[1]),
+            r = c(1, 1, 1, 1, 1, 1, 1),
+            theta = c("max", "min","cod-cs","had-cs","whg-cs","sq_E","val"),
             # fill="tozeroy",
             fill = "toself",
             name = "Ratio=1",
             lines = list(color = "red"),
-            marker = list(size = 14, color = "red",symbol=4)
-          ) %>%
-          add_trace(
-            r = t5$`COD-CS`,
-            theta = t5$sc,
-            name = "COD-CS", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`HAD-CS`,
-            theta = t5$sc,
-            name = "HAD-CS", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`MON-CS`,
-            theta = t5$sc,
-            name = "MON-CS", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`N-HKE`,
-            theta = t5$sc,
-            name = "N-HKE", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`N-MEG`,
-            theta = t5$sc,
-            name = "N-MEG", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`SOL-7E`,
-            theta = t5$sc,
-            name = "sol-7E", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`SOL-7FG`,
-            theta = t5$sc,
-            name = "SOL-7FG", marker = list(size = 12)#, lines = list(color = "black")
-          ) %>%
-          add_trace(
-            r = t5$`WHG-CS`,
-            theta = t5$sc,
-            name = "WHG-CS", marker = list(size = 12)#, lines = list(color = "black")
-          )
+            marker = list(size = 14, color = "red",symbol=4)) %>%
+          add_trace(r= t3$RelativeToSS,
+                    theta = c("max", "min","cod-cs","had-cs","whg-cs","sq_E","val")
+                    ,
+                    fill = "toself",
+                    name=paste(input$FCfilterpage33),marker = list(size = 11))%>%layout(showlegend=T) 
       }
     })
   
@@ -3018,6 +3051,12 @@ server <- function(input, output, session) {
       h4("Prediction Relative to the Single Species Advice.",
          style = "font-weight:bold;color:orange;text-decoration: underline;"
       ),
+      div(
+        style = "border-radius: 25px,width:120px;color:orange",
+        selectInput("FCfilterpage33",
+                    label = "Select Stock", choices = levels(FCubepage3$stock),
+                    selectize = T
+        )),
       plotlyOutput("FCubeRadarplot3"),br(),
       h4("Stock overshoot and undershoot by scenarios.",
          style = "font-weight:bold;color:orange;text-decoration: underline;"
@@ -3522,23 +3561,27 @@ tabPanel("Scenarios: Celtic Sea",
                             condition = "input.EfFilter == 1",
                             column(width = 5, h5("Relative share of species' landings by country in 2019 scenarios compared to the 2017 (baseline)", style = "margin-bottom=125px;text-align:center;
                                                  font-weight:bold;color:orange;text-decoration: underline;"), plotlyOutput("radrarS")), column(width = 6, tableOutput("shareWtable"))
-                            ),conditionalPanel(
+                            ), conditionalPanel(
                               condition = "input.EfFilter == 2",
                               column(width = 12, h5("Effort by fleet and metier  for 2017(baseline) and estimates for various scenarios in 2019.", style = "margin-bottom=125px;text-align:center;
                                                     font-weight:bold;color:orange;text-decoration: underline;"),br(),
-                                     fluidRow(column(3, div(
+                                     fluidRow(column(4,offset=4,div(
                                        style = "border-radius: 25px,width:120px;color:orange",
                                        selectInput("FCEfSbarPlot", label = "Select Scale", choices = c("Log Scale"=1,"Percentages"=2), selectize = T)
-                                     ) ),
-                                     column(3, div(
+                                     ) )),
+                                     fluidRow(column(6, div(
                                        style = "border-radius: 25px,width:120px;color:orange",
-                                       selectInput("FCEfSbar", label = "Select Scenario", levels(effbymet$scenario), selectize = T))))
-                                     ,br(),plotOutput("FCEfSbarplot",height = 800),
+                                       selectInput("FCEfSbar1", label = "Select Scenario", levels(effbymet$scenario), selectize = T))
+                                       ,plotOutput("FCEfSbarplot1",height = 750)),
+                                       column(6, div(
+                                         style = "border-radius: 25px,width:120px;color:orange",
+                                         selectInput("FCEfSbar2", label = "Select Scenario", levels(effbymet$scenario), selectize = T))
+                                         ,plotOutput("FCEfSbarplot2",height=750))),
                                      div(
                                        style = "border-radius: 25px,width:120px;color:orange",
                                        selectInput("FCEscen",
-                                                   label = "Select Flteet", choices = levels(effbymet$fleet),
-                                                   selectize = T
+                                       label = "Select Flteet", choices = levels(effbymet$fleet),
+                                       selectize = T
                                        )
                                        
                                      ), plotlyOutput("plotFleetScenario", height = 600))
@@ -3601,153 +3644,3 @@ fluidRow(width =12,
 )
 
 shinyApp(ui, server)
-=======
-library(shiny)
-library(tidyverse)
-library(viridis)
-
-setwd("P:\\Hackathon\\Data prep")
-data_fish <-  read.csv(file="Data.csv")
-data_fish <- data_fish %>%
-  mutate(Country =  
-           recode(Country,
-                           'UK(Northern Ireland)'="N.Ireland",
-                           'UK(Scotland)'="Scotland",
-                           'UK (England)'="England"
-                           )
-  )
-
-ui <- fluidPage(
-  
-  titlePanel("Visualising the implications of catch decreases for fleets in a mixed fishery context"),
-    mainPanel(width=12,
-      plotOutput("plot"), #width = "800px" , height = "900px"),
-      style = "margin-top:-10em"
-    ),
-    absolutePanel(id="controls", 
-                top = 80, left = 980, width = 400, height = "auto", fixed=FALSE,draggable = TRUE,
-                sliderInput("whitingslider", "Choose % reduction in Whiting Catch:", min = -100, max =0, value = 0, 
-                            step = NULL, sep = "", animate = FALSE, post  = " %")
-    )
-  )
-
-
-
-server <- function(input, output) {
-  #output$data=reactive({})
-  
-
-  output$plot <- renderPlot({
-    # Transform data in a tidy format (long format)
-    TotalWhiting=sum(data_fish$Whiting, na.rm=TRUE)
-    Change=TotalWhiting*(abs(input$whitingslider)/100)  
-    #Change=TotalWhiting*(abs(20)/100)
-    ChangePerFleet <- Change/dim(data_fish[data_fish$Whiting>0 & !is.na(data_fish$Whiting),])[1]
-    data_fish$Whiting_indicator=data_fish$Whiting-ChangePerFleet
-    data_fish$Whiting_indicator2=c()
-    for(i in 1:length(data_fish$Whiting_indicator)){
-      if(is.na(data_fish$Whiting_indicator[i])){
-        data_fish$Whiting_indicator2[i]="black"
-      }else if(data_fish$Whiting_indicator[i]<0){
-        data_fish$Whiting_indicator2[i]="red"
-      }else{
-        data_fish$Whiting_indicator2[i]="black"
-      }
-    }
-    
-    data_fish$Whiting_indicator2<-factor(data_fish$Whiting_indicator2) 
-    
-    data_fish$Whiting_changed <- data_fish$Whiting*(100+input$whitingslider)/100  
-    for(i in 1:dim(data_fish)){
-      data_fish$total[i] <- sum(data_fish$Cod[i], data_fish$Haddock[i], data_fish$Whiting_changed[i], na.rm=TRUE)
-    }
-    data_fish$Percentage.Cod <-  data_fish$Cod/data_fish$total
-    data_fish$Percentage.Haddock <-  data_fish$Haddock/data_fish$total
-    data_fish$Percentage.Whiting <-  data_fish$Whiting_changed/data_fish$total
-    data_fish1 <- subset(data_fish, select = c(1,2,4,7,10,13))
-    data_fish1 <- filter(data_fish1, Country!= "UK (Channel Island Guernsey)" & Country!= "UK (Channel Island Jersey)")
-    data_fish1$Country=factor(data_fish1$Country)
-    
-    data <- gather(data_fish1,key = "Species", value="CatchKG", -c(1,2,6)) 
-    
-    #ChangeinF=(input$whitingslider-0.52)/0.52
-    
-    # Set a number of 'empty bar' to add at the end of each group (Country)
-    empty_bar=2
-    nObsType=nlevels(as.factor(data$Species))
-    to_add = data.frame( matrix(NA, empty_bar*nlevels(data$Country)*nObsType, ncol(data)) )
-    colnames(to_add) = colnames(data)
-    to_add$Country=rep(levels(data$Country), each=empty_bar*nObsType )
-    data=rbind(data, to_add)
-    data=data %>% arrange(Country, Fleet)
-    data$id=rep( seq(1, nrow(data)/nObsType) , each=nObsType)
-    
-    
-    # Get the name and the y position of each label
-    
-    #for(i in 1:dim(data)[1]){
-    # data$indicator[i]=which[data_fish$Country=="Belgium" & data_fish$Fleet=="OTB_CRU" ]
-    #}
-    label_data= data %>% group_by(id, Fleet,Whiting_indicator2) %>% summarize(tot=sum(CatchKG,na.rm=TRUE))
-    number_of_bar=nrow(label_data)
-    angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
-    label_data$hjust<-ifelse( angle < -90, 1, 0)
-    label_data$angle<-ifelse(angle < -90, angle+180, angle)
-    
-    # prepare a data frame for base lines
-    base_data=data %>% 
-      group_by(Country) %>% 
-      summarize(start=min(id), end=max(id) - empty_bar) %>% 
-      rowwise() %>% 
-      mutate(title=mean(c(start, end)))
-    
-    # prepare a data frame for grid (scales)
-    grid_data = base_data
-    grid_data$end = grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
-    grid_data$start = grid_data$start - 1
-    grid_data=grid_data[-1,]
-    
-    
-    ggplot(data) +      
-      
-      # Add the stacked bar
-      geom_bar(aes(x=as.factor(id), y=CatchKG*10, fill=Species), stat="identity", alpha=0.5) +
-      scale_fill_viridis(discrete=TRUE) +
-      
-      #Add scale lines in blank spaces
-      # Add a val=100/75/50/25 lines. I do it at the beginning to make sur barplots are OVER it.
-      geom_segment(data=grid_data, aes(x = end, y = 0, xend = start, yend = 0), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
-      geom_segment(data=grid_data, aes(x = end, y = 5, xend = start, yend = 5), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
-      geom_segment(data=grid_data, aes(x = end, y = 10, xend = start, yend = 10), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
-
-      # Add text showing the value of each 100/75/50/25 lines
-      annotate("text", x = rep(max(data$id),3), y = c(0, 5, 10), label = c("0%", "50%", "100%") , color="grey", size=5 , angle=0, fontface="bold", hjust=0.75) +
-      
-      ylim(-10,max(label_data$tot, na.rm=T)+20) +
-      theme_minimal() +
-      theme(
-        legend.position = "left",
-        legend.text = element_text(size=17),
-        legend.margin=margin(0,-200,625,0),
-        #legend.box.margin = margin(10,10,10,10),
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        panel.grid = element_blank(),
-        plot.margin = unit(rep(-1,4), "cm") 
-      ) +
-      coord_polar() +
-      
-      
-      # Add labels on top of each bar
-      geom_text(data=label_data, aes(x=id, y=tot*10, label=Fleet, hjust=hjust), color=label_data$Whiting_indicator2, fontface="bold",alpha=0.6, size=5, angle= label_data$angle, inherit.aes = FALSE ) +
-      
-      # Add base line information
-      geom_segment(data=base_data, aes(x = start, y = -0.5, xend = end, yend = -0.5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )  +
-      geom_text(data=base_data, aes(x = title, y = -1, label=Country), hjust=c(0.5,1,1,0.6,0.5,0,0,0.5), 
-                vjust=c(0.5,0.5,0,-1,0,0.5,1.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)
-    
-  }, bg="transparent", height= 1000)
-}
-
-shinyApp(ui=ui,server=server)
->>>>>>> 74ca1156c53247cac153633245e236a0f55e5315
