@@ -21,7 +21,7 @@ library(rgdal)
 options(scipen=999)
 
 species <- c("Please select", "Cod","Haddock","Whiting","Hake", "Megrim", "Anglerfish/Monkfish","Sole")
-stocks <- read.csv("H:\\TCM mapping\\maps\\stocks_SS.csv")
+stocks <- read.csv("\\Outputs\\stocks_SS.csv")
 
 ### server ###
 server <- function(input, output, session) {
@@ -44,9 +44,9 @@ updateSelectizeInput(session, 'Stockselector',
 
 foundational.map <- reactive({
   if(input$Species_selector == "Cod"){
-    Cod_tac <- readOGR("H:/TCM mapping/Shapefiles","Cod_tac_T")
-    Cod_7ek <- readOGR("H:/TCM mapping/Shapefiles","Cod_7ek_T")
-    Add_tac <- readOGR("H:/TCM mapping/Shapefiles","Add_tac_T")
+    Cod_tac <- readOGR("/Shapefiles","Cod_tac_T")
+    Cod_7ek <- readOGR("/Shapefiles","Cod_7ek_T")
+    Add_tac <- readOGR("/Shapefiles","Add_tac_T")
     
     leaflet() %>%
       addProviderTiles(providers$Esri.OceanBasemap) %>% 
