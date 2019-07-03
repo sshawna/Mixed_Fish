@@ -1663,28 +1663,11 @@ server <- function(input, output, session) {
   stocks_list <- levels(stocks$stock)
   #create dropdown to select stock
   updateSelectizeInput(session, 'Stockselector',
-                       choices = list(stocks_list),
+                       choices = list(stocks_list), #where sp is same as species selector
                        server = TRUE,
                        selected =1)
   
-  output$Stockareas <- renderImage({
-    filename <- normalizePath(file.path('www/maps/',
-                                        paste(input$Species_selector, '_stocks.png', sep='')))
-    # Return a list containing the filename
-    list(src = filename,
-         width = 690,
-         height = 545)
-  }, deleteFile = FALSE)
-  
-  output$Stockoverlap <- renderImage({
-    filename <- normalizePath(file.path('www/maps/',
-                                        paste(input$Stockselector, '.png', sep='') 
-    ))
-    # Return a list containing the filename
-    list(src = filename,
-         width = 470,
-         height = 350)
-  }, deleteFile = FALSE)
+
   
   ###########Scenarios##########################
   
@@ -2933,7 +2916,7 @@ ui <- fluidPage(tags$head(
 
 tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
          selectInput("Area_selector","Select Area", choices=c("North_Sea", "Celtic_Sea"), selected = "North_Sea"),
-         selectInput(inputId = "Toolselected", label="Tool", choices=c("Raw accessions App","Effort App","Catchability App","Partial F App","Quota share App"),
+         selectInput(inputId = "Toolselected", label="Tool", choices=c("Effort App","Catchability App","Partial F App"),#,"Quota share App","Raw accessions App",
                      multiple=FALSE, selected = "Catchability App"),
          #conditionalPanel("input.Toolselected=='Raw accessions App'"),
          conditionalPanel(condition = "input.Toolselected == 'Effort App'",
