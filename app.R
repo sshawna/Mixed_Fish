@@ -1646,11 +1646,11 @@ server <- function(input, output, session) {
     )
   })
   output$fleet.countryfilter <- renderUI({
-    selectInput("country","Country",c("All",sort(unique(as.character(partF()$country)))),selected="All")
+    selectInput("country","Country",c("All",sort(unique(as.character(partF()$country)))),selected="ALL")
   })
   
   output$time.countryfilter <- renderUI({
-    selectInput("country1","Country:",c("All",sort(unique(as.character(partF()$country)))),selected="All"
+    selectInput("country1","Country:",c(sort(unique(as.character(partF()$country)))),selected="BE"
     )})
   
   output$efftable <- DT::renderDataTable(DT::datatable({
@@ -1666,18 +1666,20 @@ server <- function(input, output, session) {
     }
     data[,c("effort","effshare")] <- round(data[,c("effort","effshare")],2) 
     data
-  })) 
+  }, extensions = 'Buttons',options = opt)) 
   
-  output$plotEffTS <- renderPlot({
+  output$plotEffTS <- renderPlotly({
     dataplot1 <- partF()
     dataplot1$effmet <- dataplot1$effort*dataplot1$effshare
-    if (input$country1 != "All") {
+  
       dataplot1  <- dataplot1[dataplot1$country %in% input$country1,]
-    }
-    print(ggplot(dataplot1, aes(x = year, y = effmet,group=metier)) +
-            geom_point(aes(colour = factor(metier))) + geom_line(aes(group = metier)) +
-            facet_wrap(~fleet,scales="free_y") +
-            theme_bw())
+  
+    p<-ggplot(dataplot1, aes(x = year, y = effmet)) +
+            geom_point(aes(colour = metier)) + geom_line(aes(colour = metier)) +
+            facet_wrap(~fleet,ncol=1,scales="free_y") +ylab("Effort")+xlab("Year")+
+            theme_bw()
+     p <- ggplotly(p)
+     p %>% layout(hovermode = "compare",margin = list(l = 275, b =75))
   })                  
   
   output$plotEff_Fl <- renderPlot({
@@ -1713,8 +1715,10 @@ server <- function(input, output, session) {
       readRDS("data/existing_tools/4.catchability_app/data/Celtic_Sea/CScatchability.rds")
     }
   )
+  
+
   output$table.yearfilter <- renderUI({
-    selectInput("year","Year:",c("All",sort(unique(as.character(catchability()$year)),decreasing=TRUE))
+    selectInput("year2","Year:",c("All",sort(unique(as.character(catchability()$year)),decreasing=TRUE))
     )
   })
   output$table.stockfilter <- renderUI({
@@ -1722,41 +1726,78 @@ server <- function(input, output, session) {
     )
   })
   output$plot.countryfilter <- renderUI({
-    selectInput("country","Country:",c("All",sort(unique(as.character(catchability()$country))))
+    selectInput("country2","Country:",c(sort(unique(as.character(catchability()$country)))),
+                selected =sort(unique(as.character(catchability()$country)))[1] 
     )
   })
   output$plot.stockfilter <- renderUI({
-    selectInput("stock","Stock:",c("All",sort(unique(as.character(catchability()$stock)))),
-                multiple=TRUE, selected="All"
+    selectInput("stock","Stock:",c(sort(unique(as.character(catchability()$stock)))),
+                multiple=TRUE
     )
   })
   
+  output$plot2.fleetfilter <- renderUI({
+    selectInput("fleetP2","Fleet:",c(sort(unique(as.character(catchability()$fleet)))),
+                selected =sort(unique(as.character(catchability()$fleet)))[1] 
+    )
+  })
+  
+
+  
+
+
+  
+  
   output$Catchtable <- DT::renderDataTable(DT::datatable({
     data <- catchability()[,c("year","stock","fleet", "metier","logq","country")]
-    if (input$year != "All") {
-      data <- data[data$year == input$year,]
+    if (input$year2 != "All") {
+      data <- data[data$year == input$year2,]
     }
     if (input$Stock != "All") {
       data <- data[data$stock == input$Stock,]
     }
     data[,c("logq")] <- round(data[,c("logq")], 2)
     data[,c("year","country","fleet","metier","stock","logq")]
-  }))
+  }, extensions = 'Buttons',options = opt))
   
   output$plotCatchability <- renderPlot({
     data <- catchability()
-    if (input$country != "All") {
-      data <- data[data$country %in% input$country,]
-    }
-    if (input$stock != "All") {
-      data <- data[data$stock %in% input$stock,]
-    }
+   
+      data <- data[data$country %in% input$country2,]
+     
+      if (any(length(input$stock)>1 | input$stock != "All")) {
+        data <- data[data$stock %in% input$stock,]
+      }
+  #remove OTH
+    data <- data[data$metier!="OTH",]
+    
+   p<-ggplot(data, aes(x = year, y = logq )) +
+            geom_point(aes(colour=stock)) + geom_smooth(method = loess, fullrange = FALSE,aes(colour=stock)) +
+            facet_wrap(fleet ~ metier,scales="free_y") +ylab("log(Q)")+xlab("Year")+
+            theme_bw() + scale_x_continuous(breaks = seq(2009,2017))
+   
+   p# <- ggplotly(p)
+   
+  # p %>% layout(tooltip="text",margin = list(l = 150, b =75))
+  })
+  
+  
+  output$plot2Catchability<-renderPlotly({
+    data <- catchability()
+    
+    data <- data[data$fleet %in% input$fleetP2,]
+   
     #remove OTH
     data <- data[data$metier!="OTH",]
-    print(ggplot(data, aes(x = year, y = logq,group=stock)) +
-            geom_point(aes(colour=stock)) + geom_smooth(method = loess, fullrange = FALSE,aes(colour=stock)) +
-            facet_wrap(fleet ~ metier,scales="free_y") +
-            theme_bw())# + scale_x_continuous(breaks = seq(2004,2014,by=4)))
+    
+    p<-ggplot(data, aes(x = year, y = logq )) +
+      geom_point(aes(colour=metier)) + geom_line(aes(colour=metier)) +
+      facet_wrap( ~ stock,scales="free_y",ncol=1) +ylab("log(Q)")+xlab("Year")+
+      theme_bw() + scale_x_continuous(breaks = seq(2009,2017))
+    
+    p <- ggplotly(p)
+    
+     p %>% layout(tooltip="text",margin = list(l = 275, b =75))
   })
   
   ################### 5. Partial F app #########################
@@ -1766,12 +1807,14 @@ server <- function(input, output, session) {
   output$PF.stock.table <- renderUI({
     selectInput("Stock3","Stock",c("All",sort(unique(as.character(partF()$stock)))))
   })
+ 
   output$PF.country.plot1 <- renderUI({
-    selectInput("country","Country:",c("All",sort(unique(as.character(partF()$country)))),selected = 'BE')
+    selectInput("country3","Country:",c(sort(unique(as.character(partF()$country)))),
+                selected =sort(unique(as.character(partF()$country)))[1] )
   })
   output$PF.stock.plot1 <- renderUI({
-    selectInput("stock", "Stock:",c("All",sort(unique(as.character(partF()$stock)))),
-                multiple=TRUE,selected = 'All')
+    selectInput("stock3", "Stock:",c(sort(unique(as.character(partF()$stock)))),
+                multiple=TRUE)
   })
   output$PF.year.plot2 <- renderUI({
     selectInput("year_","Year:",c("All",sort(unique(as.character(partF()$year)),
@@ -1787,12 +1830,12 @@ server <- function(input, output, session) {
     if (input$year3 != "All") {
       data <- data[data$year == input$year3,]
     }
-    if (input$Stock != "All") {
-      data <- data[data$stock == input$Stock,]
+    if (input$Stock3 != "All") {
+      data <- data[data$stock == input$Stock3,]
     }
     data[,c("partF")] <- round(data[,c("partF")],8)
     data[,c("year","country","fleet","metier","stock","partF")]
-  }))
+  }, extensions = 'Buttons',options = opt))
   
   output$plotPartialF <- renderPlot({
     data <- partF()
@@ -1800,12 +1843,12 @@ server <- function(input, output, session) {
                                                   fleet=data$fleet, metier=data$metier,country=data$country),sum)
     data <- merge(data,aggregate(data$partF,list(year=data$year,stock=data$stock),sum,na.rm=T))
     data$percent <- data$partF/data$x
-    if (input$country != "All") {
-      data <- data[data$country %in% input$country,]
-    }
+  
+      data <- data[data$country %in% input$country3,]
     
-    if (any(length(input$stock)>1 | input$stock != "All")) {
-      data <- data[data$stock %in% input$stock,]
+    
+    if (any(length(input$stock3)>1 | input$stock3 != "All")) {
+      data <- data[data$stock %in% input$stock3,]
     }
     
     data <- subset(data, !is.na(percent))
@@ -1813,10 +1856,14 @@ server <- function(input, output, session) {
     #remove OTH
     data <- data[data$metier!="OTH",]
     
-    print(ggplot(data, aes(x = year, y = percent,group=stock)) +
-            geom_point(aes(colour = factor(stock))) + geom_smooth(method = lm, fullrange = FALSE, aes(colour = factor(stock))) +
-            facet_wrap(fleet ~ metier,scales="free_y") +
-            theme_bw() + scale_x_continuous(breaks = seq(2004,2014,by=4)))
+    p<-ggplot(data, aes(x = year, y = percent)) +
+            geom_point(aes(colour = stock)) + geom_smooth(method = lm, fullrange = FALSE, aes(colour = stock)) +
+            facet_wrap(fleet ~ metier,scales="free_y") +xlab("Year")
+            theme_bw() #+ scale_x_continuous(breaks = seq(2004,2014,by=4)))
+    
+    p# <- ggplotly(p)
+    
+   # p %>% layout(margin = list( b =75))
   })
   
   output$Spiderplot <- renderPlot({
@@ -1845,6 +1892,156 @@ server <- function(input, output, session) {
                   ))
     )
   })
+
+  ################### 6. Quota Share app #########################
+  
+  
+  quotashare <- reactive(
+    if(input$Area_selector == "North_Sea") {
+      readRDS("data/existing_tools/6.quota_share_app/data/North_Sea/NSquotashare.rds")
+      
+    }else if(input$Area_selector == "Celtic_Sea") {
+      readRDS("data/existing_tools/6.quota_share_app/data/Celtic_Sea/CSquotashare.rds")
+    })
+  
+  quotashare1 <- reactive(
+    if(input$Area_selector == "North_Sea") {
+      readRDS("data/existing_tools/6.quota_share_app/data/North_Sea/NSquotashare1.rds")
+      
+    }else if(input$Area_selector == "Celtic_Sea") {
+      readRDS("data/existing_tools/6.quota_share_app/data/Celtic_Sea/CSquotashare1.rds")
+    })
+  
+
+  
+  output$QS.year.table <- renderUI({
+    selectInput("year4","Year:", c("All",sort(unique(as.character(quotashare()$year)),decreasing=T)))
+  })
+  output$QS.stock.table <- renderUI({
+    selectInput("Stock4","Stock",
+                c("All",sort(unique(as.character(quotashare()$stock)))))
+  })
+  
+  output$QS.fleet.plot1 <- renderUI({
+    selectInput("fleet4","Fleet:",c(sort(unique(as.character(quotashare()$fleet))))
+               ,selected =sort(unique(as.character(quotashare()$fleet)))[1] )
+  })
+  output$QS.stock.plot1 <- renderUI({ 
+    selectInput("stock5","Stock:", c(sort(unique(as.character(quotashare()$stock)))),
+                                                  multiple=TRUE )
+  })
+  
+  output$QS.fleet.plot2 <- renderUI({ 
+    selectInput("fleet5","Fleet:", c(sort(unique(as.character(quotashare()$fleet)))),
+                multiple=TRUE,selected =sort(unique(as.character(quotashare()$fleet)))[1])
+  })
+  
+
+  output$QS.stock.plot3 <- renderUI({ 
+    selectInput("stock6","Stock:", c(sort(unique(as.character(quotashare1()$stock)))),
+                multiple=FALSE)
+  }) 
+  
+  output$QS.year.plot3 <- renderUI({ 
+    selectInput("year6","Year",c(sort(unique(quotashare1()$year))))
+  }) 
+  
+  output$QS.landings.plot3 <- renderUI({ 
+    sliderInput("plim", "percentage of stock landings", 0, 100, 80)
+  }) 
+ 
+   
+  
+  output$QStable <- DT::renderDataTable(DT::datatable({
+    data_tab<-quotashare1()
+    if (input$year4 != "All") {
+      data_tab <- data_tab[data_tab$year == input$year4,]
+    }
+    if (input$Stock4 != "All") {
+      data_tab <- data_tab[data_tab$stock == input$Stock4,]
+    }
+    
+    data_tab[,c("year","fleet","stock","landings","proportion_fleet_landings", "stock_landings_share")]
+  }, extensions = 'Buttons',options = opt))
+  
+  output$plotQS <- renderPlotly({
+    data<-quotashare()
+    data <- aggregate(list(Share=data$relstab),list(year=data$year,stock=data$stock,
+                                                    fleet=data$fleet),sum)
+    
+      data <- data[data$fleet %in% input$fleet4,]
+      if (any(length(input$stock5)>1 | input$stock5 != "All")) {
+        data <- data[data$stock %in% input$stock5,]
+      }
+    
+    
+   p<-ggplot(data, aes(x = year, y = Share)) +
+            geom_point(aes(colour = stock), size = 2) + 
+            geom_line(aes(colour = stock)) +
+            facet_wrap(~ fleet,scales="free_y",ncol = 2) +
+            theme_bw() + theme(axis.text.x = element_text(angle = - 90)) 
+   
+   p<- ggplotly(p)
+    p %>% layout(hovermode = "compare",margin = list(l = 230, b =75))
+  })
+  
+  output$plotQScomp <- renderPlotly({
+    data<-quotashare()
+    if (input$fleet5 != "All") {
+      data <- data[data$fleet %in% input$fleet5,]
+    }
+    
+   p<-ggplot(data, aes(x = year, y = catchcomp,group=fleet)) +
+            geom_bar(stat = 'identity', aes(fill = stock)) +
+            facet_wrap(~ fleet,scales="free_y",ncol=2) + geom_text(aes(x = year, y = 0.9, label = round(fleet_landings,0))) + 
+            theme_bw() + theme(axis.text.x = element_text(angle = - 90)) + coord_flip()
+   ggplotly(p)
+  })
+  output$plotCompLandings <- renderPlot({
+    data_tab<-quotashare1()
+ # for the chosen stock, which fleets are the most important
+    dats <- data_tab[data_tab$year == input$year6,]
+    dats <- dats[dats$stock == as.character(input$stock6),]
+    dats <- dats[order(dats$stock_landings_share),]
+    # select fleets contribute to XX% (input$plim) of the landings
+    dats <- dats[cumsum(dats$stock_landings_share) > (1-0.01*input$plim) , ]
+    dats1<- dats[c("fleet","stock_landings_share")]
+    names(dats1)[2] <- "prop"
+    # compute the position of each fleet on the X axis
+    dats1$pos <- 0.5 * (cumsum(dats1$prop) + cumsum(c(0, dats1$prop[-length(dats1$prop)])))
+    
+    # select the data of the original file for the main fleets only which is what will be plotted
+    dats2 <- data_tab[is.element(data_tab$fleet , dats1$fleet) & data_tab$year == input$year6,]
+    dats <- merge(dats1,dats2,all.y=T)
+    # put all no important stocks into a OTHer bin 
+    dats$oth<-0
+    dats$oth[dats$proportion_fleet_landings<0.05 & dats$stock != input$stock6]  <-1
+    dats$stock <- as.character(dats$stock)
+    dats$stock[dats$oth == 1] <- "OTH"
+    
+    
+    
+    g<-ggplot(dats , aes(x = pos , y = proportion_fleet_landings , width = prop , fill =  stock, col = (dats$stock==input$stock6)
+                         )) + 
+      geom_bar(stat="identity",position="fill" ) + 
+      facet_grid(~fleet, scales = "free_x", space = "free_x") + 
+      theme_minimal() +
+      theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank())        + 
+      scale_colour_manual("legend", values = c(NA,"black"), guide = F )   +
+      scale_x_continuous(name=paste("% of",input$stock6,"landings per fleet"),position = "top",breaks=dats$pos,labels = paste(round(100*dats$prop,0),"%"))  +
+      theme(strip.text.x = element_text( angle = 90) , text = element_text(size=12))  + ylab("Species composition of the landings\nper fleet") # +
+      #ggtitle(paste0("Main fleets contributing to ",input$plim,"% of \n",input$stock6, " landings \n\n")) + theme(plot.title = element_text(hjust = 0.5))
+    
+ g
+   
+  # p %>% layout(margin = list( l=120,b =75,t=105))
+  })
+  
+  output$QS.Landings.page<-renderUI({
+ list( paste("In the the ", input$Area_selector,"main fleets responsible for ",input$plim, "% of the ", 
+             input$stock6, "landings in", input$year6, sep="  " ),plotOutput("plotCompLandings",
+                                                                             width = '1200px', height = '800px'))}) 
+  
   
   ############## Mapping ##########################
   # Create foundational leaflet map
@@ -1854,7 +2051,7 @@ server <- function(input, output, session) {
       Cod_tac <- readOGR("www/Shapefiles","Cod_tac_T")
       Cod_7ek <- readOGR("www/Shapefiles","Cod_7ek_T")
       Add_tac <- readOGR("www/Shapefiles","Add_tac_T")
-    leaflet() %>%
+      leaflet() %>%
         addProviderTiles(providers$Esri.OceanBasemap) %>% 
         addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
                     layers = "0",
@@ -2156,172 +2353,8 @@ server <- function(input, output, session) {
     #}else if(input$Species_selector != "Please select"){
     # call reactive map
     foundational.map()
-    #}
-=======
-  ################### 6. Quota Share app #########################
-  
-  
-  quotashare <- reactive(
-    if(input$Area_selector == "North_Sea") {
-      readRDS("data/existing_tools/6.quota_share_app/data/North_Sea/NSquotashare.rds")
-      
-    }else if(input$Area_selector == "Celtic_Sea") {
-      readRDS("data/existing_tools/6.quota_share_app/data/Celtic_Sea/CSquotashare.rds")
-    })
-  
-  quotashare1 <- reactive(
-    if(input$Area_selector == "North_Sea") {
-      readRDS("data/existing_tools/6.quota_share_app/data/North_Sea/NSquotashare1.rds")
-      
-    }else if(input$Area_selector == "Celtic_Sea") {
-      readRDS("data/existing_tools/6.quota_share_app/data/Celtic_Sea/CSquotashare1.rds")
-    })
-  
-
-  
-  output$QS.year.table <- renderUI({
-    selectInput("year4","Year:", c("All",sort(unique(as.character(quotashare()$year)),decreasing=T)))
-  })
-  output$QS.stock.table <- renderUI({
-    selectInput("Stock4","Stock",
-                c("All",sort(unique(as.character(quotashare()$stock)))))
-  })
-  
-  output$QS.fleet.plot1 <- renderUI({
-    selectInput("fleet4","Fleet:",c(sort(unique(as.character(quotashare()$fleet))))
-               ,selected =sort(unique(as.character(quotashare()$fleet)))[1] )
-  })
-  output$QS.stock.plot1 <- renderUI({ 
-    selectInput("stock5","Stock:", c(sort(unique(as.character(quotashare()$stock)))),
-                                                  multiple=TRUE )
-  })
-  
-  output$QS.fleet.plot2 <- renderUI({ 
-    selectInput("fleet5","Fleet:", c(sort(unique(as.character(quotashare()$fleet)))),
-                multiple=TRUE,selected =sort(unique(as.character(quotashare()$fleet)))[1])
-  })
-  
-
-  output$QS.stock.plot3 <- renderUI({ 
-    selectInput("stock6","Stock:", c(sort(unique(as.character(quotashare1()$stock)))),
-                multiple=FALSE)
-  }) 
-  
-  output$QS.year.plot3 <- renderUI({ 
-    selectInput("year6","Year",c(sort(unique(quotashare1()$year))))
-  }) 
-  
-  output$QS.landings.plot3 <- renderUI({ 
-    sliderInput("plim", "percentage of stock landings", 0, 100, 80)
-  }) 
- 
-   
-  
-  output$QStable <- DT::renderDataTable(DT::datatable({
-    data_tab<-quotashare1()
-    if (input$year4 != "All") {
-      data_tab <- data_tab[data_tab$year == input$year4,]
-    }
-    if (input$Stock4 != "All") {
-      data_tab <- data_tab[data_tab$stock == input$Stock4,]
-    }
-    
-    data_tab[,c("year","fleet","stock","landings","proportion_fleet_landings", "stock_landings_share")]
-  }, extensions = 'Buttons',options = opt))
-  
-  output$plotQS <- renderPlotly({
-    data<-quotashare()
-    data <- aggregate(list(Share=data$relstab),list(year=data$year,stock=data$stock,
-                                                    fleet=data$fleet),sum)
-    
-      data <- data[data$fleet %in% input$fleet4,]
-      if (any(length(input$stock5)>1 | input$stock5 != "All")) {
-        data <- data[data$stock %in% input$stock5,]
-      }
-    
-    
-   p<-ggplot(data, aes(x = year, y = Share)) +
-            geom_point(aes(colour = stock), size = 2) + 
-            geom_line(aes(colour = stock)) +
-            facet_wrap(~ fleet,scales="free_y",ncol = 2) +
-            theme_bw() + theme(axis.text.x = element_text(angle = - 90)) 
-   
-   p<- ggplotly(p)
-    p %>% layout(hovermode = "compare",margin = list(l = 230, b =75))
-  })
-  
-  output$plotQScomp <- renderPlotly({
-    data<-quotashare()
-    if (input$fleet5 != "All") {
-      data <- data[data$fleet %in% input$fleet5,]
-    }
-    
-   p<-ggplot(data, aes(x = year, y = catchcomp,group=fleet)) +
-            geom_bar(stat = 'identity', aes(fill = stock)) +
-            facet_wrap(~ fleet,scales="free_y",ncol=2) + geom_text(aes(x = year, y = 0.9, label = round(fleet_landings,0))) + 
-            theme_bw() + theme(axis.text.x = element_text(angle = - 90)) + coord_flip()
-   ggplotly(p)
-    
->>>>>>> 374fa2623de8748c0e787593e6ca3e6dad734d1c
-  })
-  
-  
-  output$plotCompLandings <- renderPlot({
-    data_tab<-quotashare1()
- # for the chosen stock, which fleets are the most important
-    dats <- data_tab[data_tab$year == input$year6,]
-    dats <- dats[dats$stock == as.character(input$stock6),]
-    dats <- dats[order(dats$stock_landings_share),]
-    # select fleets contribute to XX% (input$plim) of the landings
-    dats <- dats[cumsum(dats$stock_landings_share) > (1-0.01*input$plim) , ]
-    dats1<- dats[c("fleet","stock_landings_share")]
-    names(dats1)[2] <- "prop"
-    # compute the position of each fleet on the X axis
-    dats1$pos <- 0.5 * (cumsum(dats1$prop) + cumsum(c(0, dats1$prop[-length(dats1$prop)])))
-    
-    # select the data of the original file for the main fleets only which is what will be plotted
-    dats2 <- data_tab[is.element(data_tab$fleet , dats1$fleet) & data_tab$year == input$year6,]
-    dats <- merge(dats1,dats2,all.y=T)
-    # put all no important stocks into a OTHer bin 
-    dats$oth<-0
-    dats$oth[dats$proportion_fleet_landings<0.05 & dats$stock != input$stock6]  <-1
-    dats$stock <- as.character(dats$stock)
-    dats$stock[dats$oth == 1] <- "OTH"
-    
-    
-    
-    g<-ggplot(dats , aes(x = pos , y = proportion_fleet_landings , width = prop , fill =  stock, col = (dats$stock==input$stock6)
-                         )) + 
-      geom_bar(stat="identity",position="fill" ) + 
-      facet_grid(~fleet, scales = "free_x", space = "free_x") + 
-      theme_minimal() +
-      theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank())        + 
-      scale_colour_manual("legend", values = c(NA,"black"), guide = F )   +
-      scale_x_continuous(name=paste("% of",input$stock6,"landings per fleet"),position = "top",breaks=dats$pos,labels = paste(round(100*dats$prop,0),"%"))  +
-      theme(strip.text.x = element_text( angle = 90) , text = element_text(size=12))  + ylab("Species composition of the landings\nper fleet") # +
-      #ggtitle(paste0("Main fleets contributing to ",input$plim,"% of \n",input$stock6, " landings \n\n")) + theme(plot.title = element_text(hjust = 0.5))
-    
- g
-   
-  # p %>% layout(margin = list( l=120,b =75,t=105))
-  })
-  
-  output$QS.Landings.page<-renderUI({
- list( paste("In the the ", input$Area_selector,"main fleets responsible for ",input$plim, "% of the ", 
-             input$stock6, "landings in", input$year6, sep="  " ),plotOutput("plotCompLandings",
-                                                                             width = '1200px', height = '800px'))}) 
-  
-  
-  ############## Mapping ##########################
-  sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
-  stocks <- read.csv("www/maps/stocks_SS.csv")
-  #stocks_list <- list('cod-7e-k','had-7b-k','hke-nrtn','meg-ivvi','meg-rock','mgw-78','whg-7b-k')
-  stocks_list <- levels(stocks$stock)
-  #create dropdown to select stock
-  updateSelectizeInput(session, 'Stockselector',
-                       choices = list(stocks_list), #where sp is same as species selector
-                       server = TRUE,
-                       selected =1)
+  }
+  )
   
 
   
