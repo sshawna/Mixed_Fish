@@ -20,6 +20,9 @@ library(googlesheets)
 library(reshape2)
 library(psych)
 library(grid)
+library(leaflet)
+library(raster)
+library(rgdal)
 #library(vmstools)
 options(scipen=999)
 
@@ -58,7 +61,7 @@ effbymet<-read.csv("data/FCube/effbymet.csv")
 chocked<-read.csv("data/FCube/ChockedS.csv")
 FCubepage3 <- read.csv("data/FCube/FCubePage.csv")
 FCubepage3Radar <- dcast(FCubepage3, sc + year + value ~ stock, value.var = "RelativeToSS")
-sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
+species <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
 
 
 
@@ -329,139 +332,6 @@ server <- function(input, output, session) {
     }
     })
   
-  
-  ################Hackathon  Work#################################
-  output$plot <- renderPlot({
-    # Transform data in a tidy format (long format)
-    TotalWhiting=sum(data_fish$Whiting, na.rm=TRUE)
-    Change=TotalWhiting*(abs(input$whitingslider)/100)  
-    ChangePerFleet <- Change/dim(data_fish[data_fish$Whiting>0 & !is.na(data_fish$Whiting),])[1]
-    data_fish$Whiting_indicator=data_fish$Whiting-ChangePerFleet
-    data_fish$Whiting_indicator2=c()
-    for(i in 1:length(data_fish$Whiting_indicator)){
-      if(is.na(data_fish$Whiting_indicator[i])){
-        data_fish$Whiting_indicator2[i]="black"
-      }else if(data_fish$Whiting_indicator[i]<0){
-        data_fish$Whiting_indicator2[i]="red"
-      }else{
-        data_fish$Whiting_indicator2[i]="black"
-      }
-    }
-    
-    data_fish$Whiting_indicator2<-factor(data_fish$Whiting_indicator2) 
-    data_fish$Whiting_changed <- data_fish$Whiting*(100+input$whitingslider)/100  
-    for(i in 1:dim(data_fish)){
-      data_fish$total[i] <- sum(data_fish$Cod[i], data_fish$Haddock[i], data_fish$Whiting_changed[i], na.rm=TRUE)
-    }
-    data_fish$Percentage.Cod <-  data_fish$Cod/data_fish$total
-    data_fish$Percentage.Haddock <-  data_fish$Haddock/data_fish$total
-    data_fish$Percentage.Whiting <-  data_fish$Whiting_changed/data_fish$total
-    data_fish1 <- subset(data_fish, select = c(1,2,4,7,10,13))
-    data_fish1 <- filter(data_fish1, Country!= "UK (Channel Island Guernsey)" & Country!= "UK (Channel Island Jersey)")
-    data_fish1$Country=factor(data_fish1$Country)
-    
-    data <- gather(data_fish1,key = "Species", value="CatchKG", -c(1,2,6)) 
-    
-    #ChangeinF=(input$whitingslider-0.52)/0.52
-    
-    # Set a number of 'empty bar' to add at the end of each group (Country)
-    empty_bar=2
-    nObsType=nlevels(as.factor(data$Species))
-    to_add = data.frame( matrix(NA, empty_bar*nlevels(data$Country)*nObsType, ncol(data)) )
-    colnames(to_add) = colnames(data)
-    to_add$Country=rep(levels(data$Country), each=empty_bar*nObsType )
-    data=rbind(data, to_add)
-    data=data %>% arrange(Country, Fleet)
-    data$id=rep( seq(1, nrow(data)/nObsType) , each=nObsType)
-    
-    
-    # Get the name and the y position of each label
-    
-    #for(i in 1:dim(data)[1]){
-    # data$indicator[i]=which[data_fish$Country=="Belgium" & data_fish$Fleet=="OTB_CRU" ]
-    #}
-    label_data= data %>% group_by(id, Fleet,Whiting_indicator2) %>% summarize(tot=sum(CatchKG,na.rm=TRUE))
-    number_of_bar=nrow(label_data)
-    angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
-    label_data$hjust<-ifelse( angle < -90, 1, 0)
-    label_data$angle<-ifelse(angle < -90, angle+180, angle)
-    
-    # prepare a data frame for base lines
-    base_data=data %>% 
-      group_by(Country) %>% 
-      summarize(start=min(id), end=max(id) - empty_bar) %>% 
-      rowwise() %>% 
-      mutate(title=mean(c(start, end)))
-    
-    # prepare a data frame for grid (scales)
-    grid_data = base_data
-    grid_data$end = grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
-    grid_data$start = grid_data$start - 1
-    grid_data=grid_data[-1,]
-    
-    
-    ggplot(data) +      
-      
-      # Add the stacked bar
-      geom_bar(aes(x=as.factor(id), y=CatchKG*10, fill=Species), stat="identity", alpha=0.5) +
-      scale_fill_viridis(discrete=TRUE) +
-      
-      #Add scale lines in blank spaces
-      # Add a val=100/75/50/25 lines. I do it at the beginning to make sur barplots are OVER it.
-      geom_segment(data=grid_data, aes(x = end, y = 0, xend = start, yend = 0), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
-      geom_segment(data=grid_data, aes(x = end, y = 5, xend = start, yend = 5), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
-      geom_segment(data=grid_data, aes(x = end, y = 10, xend = start, yend = 10), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
-      
-      # Add text showing the value of each 100/75/50/25 lines
-      annotate("text", x = rep(max(data$id),3), y = c(0, 5, 10), label = c("0%", "50%", "100%") , color="grey", size=5 , angle=0, fontface="bold", hjust=0.75) +
-      
-      ylim(-10,max(label_data$tot, na.rm=T)+20) +
-      theme_minimal() +
-      theme(
-        legend.position = "left",
-        legend.text = element_text(size=17),
-        legend.margin=margin(0,-200,625,0),
-        #legend.box.margin = margin(10,10,10,10),
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        panel.grid = element_blank(),
-        plot.margin = unit(rep(-1,4), "cm") 
-      ) +
-      coord_polar() +
-      
-      
-      # Add labels on top of each bar
-      geom_text(data=label_data, aes(x=id, y=tot*10, label=Fleet, hjust=hjust), color=label_data$Whiting_indicator2, fontface="bold",alpha=0.6, size=5, angle= label_data$angle, inherit.aes = FALSE ) +
-      
-      # Add base line information
-      geom_segment(data=base_data, aes(x = start, y = -0.5, xend = end, yend = -0.5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )  +
-      geom_text(data=base_data, aes(x = title, y = -1, label=Country), hjust=c(0.5,1,1,0.6,0.5,0,0,0.5), 
-                vjust=c(0.5,0.5,0,-1,0,0.5,1.5,1.5), colour = "black", alpha=0.8, size=4.5, fontface="bold", inherit.aes = FALSE)
-    
-  }, height= 670)
-  
-  
-  
-  
-  #########About botton#######
-  observeEvent(input$about, {
-    shinyalert(
-      title = "Mixed Fisheries",
-      text = "Vizualization Tool for Mixed Fisheries Landings and Effort in Celtic Seas Ecoregion. 
-      <br> Try changing the filters on the panel to compare different <b>Metier</b> and <b>Species</b> by <b>years</b> .",
-      closeOnEsc = TRUE,
-      closeOnClickOutside = TRUE,
-      html = TRUE,
-      type = "info",
-      showConfirmButton = TRUE,
-      showCancelButton = FALSE,
-      confirmButtonText = "OK",
-      confirmButtonCol = "#addd8e",
-      timer = 0,
-      imageUrl = "",
-      animation = TRUE
-    )
-  })
   
   
   ###########Landings##########################
@@ -1131,11 +1001,6 @@ server <- function(input, output, session) {
     
     
   ))) # end of option))
-  
-  
-  
-  
-  
   
   ##########Efforts##############
   ###############Page1#################
@@ -1826,17 +1691,113 @@ server <- function(input, output, session) {
   })
   
   ############## Mapping ##########################
-  sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
+  species <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
   stocks <- read.csv("www/maps/stocks_SS.csv")
-  #stocks_list <- list('cod-7e-k','had-7b-k','hke-nrtn','meg-ivvi','meg-rock','mgw-78','whg-7b-k')
   stocks_list <- levels(stocks$stock)
   #create dropdown to select stock
   updateSelectizeInput(session, 'Stockselector',
-                       choices = list(stocks_list), #where sp is same as species selector
+                       choices = list(stocks_list),
                        server = TRUE,
                        selected =1)
-  
 
+  # Create foundational leaflet map
+  # and store it as a reactive expression
+  foundational.map <- reactive({
+    if(input$Species_selector == "Cod"){
+      Cod_tac <- readOGR("/Shapefiles","Cod_tac_T")
+      Cod_7ek <- readOGR("/Shapefiles","Cod_7ek_T")
+      Add_tac <- readOGR("/Shapefiles","Add_tac_T")
+      
+      leaflet() %>%
+        addProviderTiles(providers$Esri.OceanBasemap) %>% 
+        addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
+                    layers = "0",
+                    options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
+                    attribution = "ICES") %>%
+        setView(lng=-14,lat=52,zoom=3) %>% 
+        addLegend("bottomleft",col=c('#52BE80','#52BE80','#FF5733'),
+                  labels = c("Cod TAC area",  "Additional TAC areas","Cod 7ek stock"))%>%
+        addPolygons(data=Cod_tac, group="TAC", stroke = FALSE,fill=TRUE,
+                    fillColor = '#52BE80', fillOpacity=0.5,
+                    popup=paste("<b>Full</b> ",Cod_tac$Area_Full, "<br />",
+                                "<b>Area_27:</b> ",Cod_tac$Area_27)) %>%
+        addPolygons(data=Cod_7ek,  group="Stocks", stroke =TRUE, weight=1,
+                    popup=paste("<b>Stock: </b>7e-k", "<br />",
+                                "<b>Area: </b> ",Cod_7ek$Area_Full, "<br />"),fill=TRUE,
+                    fillColor = '#FF5733', fillOpacity=0.6,
+                    highlight = highlightOptions(weight = 10,
+                                                 color = "blue",
+                                                 bringToFront = TRUE)) %>%
+        addPolygons(data=Add_tac, group="TAC", stroke = FALSE, fill=TRUE,
+                    fillColor = '#52BE80', fillOpacity=0.5,
+                    popup=paste("<b>Full</b> ",Add_tac$Area_Full, "<br />",
+                                "<b>Area_27:</b> ",Add_tac$Area_27))%>%
+        addLayersControl(baseGroups = c("Esri.OceanBasemap", "ICES Areas"),
+                         overlayGroups = c("TAC","Stocks"),  
+                         options = layersControlOptions(collapsed = FALSE)) 
+    }else if(input$Species_selector == "Sole"){
+      Sol_tac <- readOGR("H:/TCM mapping/Shapefiles","Sol_tac_T")
+      Sol_7e <- readOGR("H:/TCM mapping/Shapefiles","Sol_7e_T")
+      Sol_7fg <- readOGR("H:/TCM mapping/Shapefiles","Sol_7fg_T")
+      # pal <- colorFactor("YlOrRd", domain = c(Mon_7bk,Mon_8abd))
+      leaflet() %>%
+        addProviderTiles(providers$Esri.OceanBasemap) %>% 
+        addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
+                    layers = "0",
+                    options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
+                    attribution = "ICES") %>%
+        setView(lng=-14,lat=52,zoom=5) %>% 
+        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948'),
+                  labels = c("Sole TAC area","Sole 7bk stock","Sole 8abd stock"))%>%
+        addPolygons(data=Sol_tac, group="TAC", stroke = FALSE,fill=TRUE,
+                    fillColor = '#3d771e', fillOpacity=0.4,
+                    popup=paste("<b>Full name:</b> ",Sol_tac$Area_Full, "<br />",
+                                "<b>Area_27:</b> ",Sol_tac$Area_27, "<br />",
+                                "<b>Major_FA:</b> ",Sol_tac$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Sol_tac$SubArea, "<br />",
+                                "<b>Division:</b> ",Sol_tac$Division, "<br />",
+                                "<b>Sub-Division:</b> ",Sol_tac$SubDivisio, "<br />")) %>%
+        addPolygons(data=Sol_7e,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>7e", "<br />",
+                                "<b>Area: </b> ",Sol_7e$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Sol_7e$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Sol_7e$SubArea, "<br />",
+                                "<b>Division:</b> ",Sol_7e$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addPolygons(data=Sol_7fg,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>8abd", "<br />",
+                                "<b>Area: </b> ",Sol_7fg$Area_Full, "<br />",
+                                "<b>Area: </b> ",Sol_7fg$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Sol_7fg$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Sol_7fg$SubArea, "<br />",
+                                "<b>Division:</b> ",Sol_7fg$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addLayersControl(baseGroups = c("Esri.OceanBasemap"),
+                         overlayGroups = c("Stocks","TAC"),  
+                         options = layersControlOptions(collapsed = FALSE))
+    }
+  }) # end of foundational.map()
+  
+  
+  # render foundational leaflet map
+  output$map <- leaflet::renderLeaflet({
+    #if(input$Species_selector == "Please select"){
+    # leaflet() %>%
+    #  addProviderTiles(providers$Esri.OceanBasemap) %>% 
+    #  addPolylines(color = "grey",data= div, group = "ICES Sub-Areas", weight = 3)%>%
+    #  addPolylines(color = "darkgrey",data= cont, group = "ICES Sub-Areas", weight = 3)#%>%
+    
+    #}else if(input$Species_selector != "Please select"){
+    # call reactive map
+    foundational.map()
+    #}
+  })
   
   ###########Scenarios##########################
   
@@ -3131,13 +3092,6 @@ ui <- fluidPage(tags$head(
                           )
                           ), column(6, uiOutput("fishing")))
                         ),
-               
-               tabPanel(" Hackathon Work", value = "hw", icon = icon("folder-open"),
-                        h3("Visualising the implications of catch decreases for fleets in a mixed fishery context"),
-                        plotOutput("plot"),
-                        absolutePanel(id="controls",top = 80, left = 700, width = 400, height = "auto", fixed=FALSE, draggable = TRUE,
-                                      sliderInput("whitingslider", "Choose % reduction in Whiting Catch:", min = -100, max =0, value = 0, 
-                                                  step = NULL, sep = "", animate = FALSE, post  = " %"))),
                tabPanel("Landings: Celtic Sea",
                         value = "mi", icon = icon("fish"),
                         tabsetPanel(
@@ -3418,13 +3372,10 @@ tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
          conditionalPanel("input.Toolselected == 'Quota share App'")
 ),
 tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
-         fluidRow(column(width=5, selectInput("Species_selector","Select Species", choices=c(sp)),
-                         plotOutput('Stockareas')),
-                  column(width=5,offset=1,
-                         selectizeInput(inputId = "Stockselector", label="Select Stock",
-                                        choices=NULL, multiple=FALSE),
-                         plotOutput('Stockoverlap'))
+         fluidRow(selectInput("Species_selector","Select Species", choices=c(species)),
+                  leafletOutput("map", width="95%", height=680)
          ),
+         br(),
          br(),
          br(),
          br(),
