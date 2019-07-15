@@ -61,7 +61,8 @@ effbymet<-read.csv("data/FCube/effbymet.csv")
 chocked<-read.csv("data/FCube/ChockedS.csv")
 FCubepage3 <- read.csv("data/FCube/FCubePage.csv")
 FCubepage3Radar <- dcast(FCubepage3, sc + year + value ~ stock, value.var = "RelativeToSS")
-species <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
+
+species <- c("Cod","Haddock","Whiting","Hake", "Megrim", "Anglerfish/Monkfish","Sole")
 
 
 
@@ -1691,15 +1692,6 @@ server <- function(input, output, session) {
   })
   
   ############## Mapping ##########################
-  species <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
-  stocks <- read.csv("www/maps/stocks_SS.csv")
-  stocks_list <- levels(stocks$stock)
-  #create dropdown to select stock
-  updateSelectizeInput(session, 'Stockselector',
-                       choices = list(stocks_list),
-                       server = TRUE,
-                       selected =1)
-
   # Create foundational leaflet map
   # and store it as a reactive expression
   foundational.map <- reactive({
@@ -1714,24 +1706,35 @@ server <- function(input, output, session) {
                     layers = "0",
                     options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
                     attribution = "ICES") %>%
-        setView(lng=-14,lat=52,zoom=3) %>% 
-        addLegend("bottomleft",col=c('#52BE80','#52BE80','#FF5733'),
+        setView(lng=-14,lat=52,zoom=5) %>% 
+        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948'),
                   labels = c("Cod TAC area",  "Additional TAC areas","Cod 7ek stock"))%>%
         addPolygons(data=Cod_tac, group="TAC", stroke = FALSE,fill=TRUE,
-                    fillColor = '#52BE80', fillOpacity=0.5,
+                    fillColor = '#3d771e', fillOpacity=0.5,
                     popup=paste("<b>Full</b> ",Cod_tac$Area_Full, "<br />",
-                                "<b>Area_27:</b> ",Cod_tac$Area_27)) %>%
-        addPolygons(data=Cod_7ek,  group="Stocks", stroke =TRUE, weight=1,
-                    popup=paste("<b>Stock: </b>7e-k", "<br />",
-                                "<b>Area: </b> ",Cod_7ek$Area_Full, "<br />"),fill=TRUE,
-                    fillColor = '#FF5733', fillOpacity=0.6,
-                    highlight = highlightOptions(weight = 10,
-                                                 color = "blue",
-                                                 bringToFront = TRUE)) %>%
-        addPolygons(data=Add_tac, group="TAC", stroke = FALSE, fill=TRUE,
-                    fillColor = '#52BE80', fillOpacity=0.5,
+                                "<b>Area_27:</b> ",Cod_tac$Area_27, "<br />",
+                                "<b>Major_FA:</b> ",Cod_tac$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Cod_tac$SubArea, "<br />",
+                                "<b>Division:</b> ",Cod_tac$Division, "<br />",
+                                "<b>Sub-Division:</b> ",Cod_tac$SubDivisio, "<br />")) %>%
+        addPolygons(data=Add_tac, group="TAC", stroke = FALSE,fill=TRUE,
+                    fillColor = '#c773bd', fillOpacity=0.5,
                     popup=paste("<b>Full</b> ",Add_tac$Area_Full, "<br />",
-                                "<b>Area_27:</b> ",Add_tac$Area_27))%>%
+                                "<b>Area_27:</b> ",Add_tac$Area_27, "<br />",
+                                "<b>Major_FA:</b> ",Add_tac$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Add_tac$SubArea, "<br />",
+                                "<b>Division:</b> ",Add_tac$Division, "<br />",
+                                "<b>Sub-Division:</b> ",Add_tac$SubDivisio, "<br />")) %>%
+        addPolygons(data=Cod_7ek,  group="Stocks", stroke =TRUE, 
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>7ek", "<br />",
+                                "<b>Area: </b> ",Cod_7ek$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Cod_7ek$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Cod_7ek$SubArea, "<br />",
+                                "<b>Division:</b> ",Cod_7ek$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
         addLayersControl(baseGroups = c("Esri.OceanBasemap", "ICES Areas"),
                          overlayGroups = c("TAC","Stocks"),  
                          options = layersControlOptions(collapsed = FALSE)) 
@@ -1739,7 +1742,6 @@ server <- function(input, output, session) {
       Sol_tac <- readOGR("www/Shapefiles","Sol_tac_T")
       Sol_7e <- readOGR("www/Shapefiles","Sol_7e_T")
       Sol_7fg <- readOGR("www/Shapefiles","Sol_7fg_T")
-      # pal <- colorFactor("YlOrRd", domain = c(Mon_7bk,Mon_8abd))
       leaflet() %>%
         addProviderTiles(providers$Esri.OceanBasemap) %>% 
         addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
@@ -1770,7 +1772,7 @@ server <- function(input, output, session) {
         addPolygons(data=Sol_7fg,  group="Stocks", stroke =TRUE, weight=1,
                     fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
                     color = "white",dashArray = "3",
-                    popup=paste("<b>Stock: </b>8abd", "<br />",
+                    popup=paste("<b>Stock: </b>7fg", "<br />",
                                 "<b>Area: </b> ",Sol_7fg$Area_Full, "<br />",
                                 "<b>Area: </b> ",Sol_7fg$Area_Full, "<br />",
                                 "<b>Major_FA:</b> ",Sol_7fg$Major_FA, "<br />",
@@ -1804,11 +1806,203 @@ server <- function(input, output, session) {
         addPolygons(data=Had_7bk,  group="Stocks", stroke =TRUE, weight=1,
                     fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
                     color = "white",dashArray = "3",
-                    popup=paste("<b>Stock: </b>7e", "<br />",
+                    popup=paste("<b>Stock: </b>7bk", "<br />",
                                 "<b>Area: </b> ",Had_7bk$Area_Full, "<br />",
                                 "<b>Major_FA:</b> ",Had_7bk$Major_FA, "<br />",
                                 "<b>Sub-Area:</b> ",Had_7bk$SubArea, "<br />",
                                 "<b>Division:</b> ",Had_7bk$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addLayersControl(baseGroups = c("Esri.OceanBasemap"),
+                         overlayGroups = c("Stocks","TAC"),  
+                         options = layersControlOptions(collapsed = FALSE))
+    }else if(input$Species_selector == "Whiting"){
+      Whg_tac <- readOGR("www/Shapefiles","Whg_tac_T")
+      Whg_7bc <- readOGR("www/Shapefiles","Whg_7bc_T")
+      Whg_7bcek <- readOGR("www/Shapefiles","Whg_7bcek_T")
+      leaflet() %>%
+        addProviderTiles(providers$Esri.OceanBasemap) %>% 
+        addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
+                    layers = "0",
+                    options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
+                    attribution = "ICES") %>%
+        setView(lng=-14,lat=52,zoom=5) %>% 
+        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948'),
+                  labels = c("Whiting TAC area","Whiting 7bc stock","Whiting 7bcek stock"))%>%
+        addPolygons(data=Whg_tac, group="TAC", stroke = FALSE,fill=TRUE,
+                    fillColor = '#3d771e', fillOpacity=0.4,
+                    popup=paste("<b>Full name:</b> ",Whg_tac$Area_Full, "<br />",
+                                "<b>Area_27:</b> ",Whg_tac$Area_27, "<br />",
+                                "<b>Major_FA:</b> ",Whg_tac$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Whg_tac$SubArea, "<br />",
+                                "<b>Division:</b> ",Whg_tac$Division, "<br />",
+                                "<b>Sub-Division:</b> ",Whg_tac$SubDivisio, "<br />")) %>%
+        addPolygons(data=Whg_7bc,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>7bc", "<br />",
+                                "<b>Area: </b> ",Whg_7bc$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Whg_7bc$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Whg_7bc$SubArea, "<br />",
+                                "<b>Division:</b> ",Whg_7bc$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addPolygons(data=Whg_7bcek,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>7bcek", "<br />",
+                                "<b>Area: </b> ",Whg_7bcek$Area_Full, "<br />",
+                                "<b>Area: </b> ",Whg_7bcek$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Whg_7bcek$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Whg_7bcek$SubArea, "<br />",
+                                "<b>Division:</b> ",Whg_7bcek$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addLayersControl(baseGroups = c("Esri.OceanBasemap"),
+                         overlayGroups = c("Stocks","TAC"),  
+                         options = layersControlOptions(collapsed = FALSE))
+    }else if(input$Species_selector == "Hake"){
+      Hke_tac <- readOGR("www/Shapefiles","Hke_tac_T")
+      Hke_3a46 <- readOGR("www/Shapefiles","Hke_3a46_T")
+      Hke_7 <- readOGR("www/Shapefiles","Hke_7_T")
+      Hke_8abd <- readOGR("www/Shapefiles","Hke_8abd_T")
+      leaflet() %>%
+        addProviderTiles(providers$Esri.OceanBasemap) %>% 
+        addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
+                    layers = "0",
+                    options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
+                    attribution = "ICES") %>%
+        setView(lng=-14,lat=52,zoom=5) %>% 
+        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948','#E2BEBA'),
+                  labels = c("Hake TAC area","Hake 3a46 stock", "Hake 7 stock","Hake 8abd stock"))%>%
+        addPolygons(data=Hke_tac, group="TAC", stroke = FALSE,fill=TRUE,
+                    fillColor = '#3d771e', fillOpacity=0.4,
+                    popup=paste("<b>Full name:</b> ",Hke_tac$Area_Full, "<br />",
+                                "<b>Area_27:</b> ",Hke_tac$Area_27, "<br />",
+                                "<b>Major_FA:</b> ",Hke_tac$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Hke_tac$SubArea, "<br />",
+                                "<b>Division:</b> ",Hke_tac$Division, "<br />",
+                                "<b>Sub-Division:</b> ",Hke_tac$SubDivisio, "<br />")) %>%
+        addPolygons(data=Hke_3a46,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>3a46", "<br />",
+                                "<b>Area: </b> ",Hke_3a46$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Hke_3a46$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Hke_3a46$SubArea, "<br />",
+                                "<b>Division:</b> ",Hke_3a46$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addPolygons(data=Hke_7,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>7", "<br />",
+                                "<b>Area: </b> ",Hke_7$Area_Full, "<br />",
+                                "<b>Area: </b> ",Hke_7$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Hke_7$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Hke_7$SubArea, "<br />",
+                                "<b>Division:</b> ",Hke_7$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addPolygons(data=Hke_8abd,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>8abd", "<br />",
+                                "<b>Area: </b> ",Hke_8abd$Area_Full, "<br />",
+                                "<b>Area: </b> ",Hke_8abd$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Hke_8abd$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Hke_8abd$SubArea, "<br />",
+                                "<b>Division:</b> ",Hke_8abd$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addLayersControl(baseGroups = c("Esri.OceanBasemap"),
+                         overlayGroups = c("Stocks","TAC"),  
+                         options = layersControlOptions(collapsed = FALSE))
+    }else if(input$Species_selector == "Megrim"){
+      Meg_tac <- readOGR("www/Shapefiles","Meg_tac_T")
+      Meg_7bk <- readOGR("www/Shapefiles","Meg_7bk_T")
+      Meg_8abd <- readOGR("www/Shapefiles","Meg_8abd_T")
+      leaflet() %>%
+        addProviderTiles(providers$Esri.OceanBasemap) %>% 
+        addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
+                    layers = "0",
+                    options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
+                    attribution = "ICES") %>%
+        setView(lng=-14,lat=52,zoom=5) %>% 
+        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948'),
+                  labels = c("Megrim TAC area", "Megrim 7bk stock","Megrim 8abd stock"))%>%
+        addPolygons(data=Meg_tac, group="TAC", stroke = FALSE,fill=TRUE,
+                    fillColor = '#3d771e', fillOpacity=0.4,
+                    popup=paste("<b>Full name:</b> ",Meg_tac$Area_Full, "<br />",
+                                "<b>Area_27:</b> ",Meg_tac$Area_27, "<br />",
+                                "<b>Major_FA:</b> ",Meg_tac$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Meg_tac$SubArea, "<br />",
+                                "<b>Division:</b> ",Meg_tac$Division, "<br />",
+                                "<b>Sub-Division:</b> ",Meg_tac$SubDivisio, "<br />")) %>%
+        addPolygons(data=Meg_7bk,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>7bk", "<br />",
+                                "<b>Area: </b> ",Meg_7bk$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Meg_7bk$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Meg_7bk$SubArea, "<br />",
+                                "<b>Division:</b> ",Meg_7bk$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addPolygons(data=Meg_8abd,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>8abd", "<br />",
+                                "<b>Area: </b> ",Meg_8abd$Area_Full, "<br />",
+                                "<b>Area: </b> ",Meg_8abd$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Meg_8abd$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Meg_8abd$SubArea, "<br />",
+                                "<b>Division:</b> ",Meg_8abd$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addLayersControl(baseGroups = c("Esri.OceanBasemap"),
+                         overlayGroups = c("Stocks","TAC"),  
+                         options = layersControlOptions(collapsed = FALSE))
+    }else if(input$Species_selector == "Anglerfish/Monkfish"){
+      Mon_tac <- readOGR("www/Shapefiles","Mon_tac_T")
+      Mon_7bk <- readOGR("www/Shapefiles","Mon_7bk_T")
+      Mon_8abd <- readOGR("www/Shapefiles","Mon_8abd_T")
+      leaflet() %>%
+        addProviderTiles(providers$Esri.OceanBasemap) %>% 
+        addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
+                    layers = "0",
+                    options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
+                    attribution = "ICES") %>%
+        setView(lng=-14,lat=52,zoom=5) %>% 
+        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948'),
+                  labels = c("Monk/Angler TAC area", "Monk/Angler 7bk stock","Monk/Angler 8abd stock"))%>%
+        addPolygons(data=Mon_tac, group="TAC", stroke = FALSE,fill=TRUE,
+                    fillColor = '#3d771e', fillOpacity=0.4,
+                    popup=paste("<b>Full name:</b> ",Mon_tac$Area_Full, "<br />",
+                                "<b>Area_27:</b> ",Mon_tac$Area_27, "<br />",
+                                "<b>Major_FA:</b> ",Mon_tac$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Mon_tac$SubArea, "<br />",
+                                "<b>Division:</b> ",Mon_tac$Division, "<br />",
+                                "<b>Sub-Division:</b> ",Mon_tac$SubDivisio, "<br />")) %>%
+        addPolygons(data=Mon_7bk,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>7bk", "<br />",
+                                "<b>Area: </b> ",Mon_7bk$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Mon_7bk$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Mon_7bk$SubArea, "<br />",
+                                "<b>Division:</b> ",Mon_7bk$Division, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
+        addPolygons(data=Mon_8abd,  group="Stocks", stroke =TRUE, weight=1,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    color = "white",dashArray = "3",
+                    popup=paste("<b>Stock: </b>8abd", "<br />",
+                                "<b>Area: </b> ",Mon_8abd$Area_Full, "<br />",
+                                "<b>Area: </b> ",Mon_8abd$Area_Full, "<br />",
+                                "<b>Major_FA:</b> ",Mon_8abd$Major_FA, "<br />",
+                                "<b>Sub-Area:</b> ",Mon_8abd$SubArea, "<br />",
+                                "<b>Division:</b> ",Mon_8abd$Division, "<br />"),
                     highlight = highlightOptions(weight = 5,
                                                  bringToFront = TRUE)) %>%
         addLayersControl(baseGroups = c("Esri.OceanBasemap"),
@@ -3405,15 +3599,13 @@ tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
          conditionalPanel("input.Toolselected == 'Quota share App'")
 ),
 tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
-         fluidRow(selectInput("Species_selector","Select Species", choices=c(species)),
-                  leafletOutput("map", width="95%", height=680)
+         fluidRow(column(1)),
+         fluidRow(column(11,
+                         selectInput("Species_selector","Select Species", 
+                                     choices=c(species), selected = "Cod", 
+                                     multiple = FALSE), #radioButtons
+                         leafletOutput("map", width="95%", height=680))
          ),
-         br(),
-         br(),
-         br(),
-         br(),
-         br(),
-         br(),
          br()
 ),
 tabPanel("Scenarios: Celtic Sea",
