@@ -2,8 +2,8 @@ library(shiny)
 library(tidyverse)
 library(viridis)
 
-setwd("P:\\Hackathon\\Data prep")
-data_fish <-  read.csv(file="Data.csv")
+#setwd("P:\\Hackathon\\Data prep")
+data_fish <-  read.csv(file="Data_2.csv")
 data_fish <- data_fish %>%
   mutate(Country =  
            recode(Country,

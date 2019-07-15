@@ -46,7 +46,7 @@ min,2019,N-MEG,ssb,95311,111887,0.851850528,-16576,Undershoot
 min,2019,SOL-7E,ssb,4105,4105,1,0,Correct
 min,2019,SOL-7FG,ssb,1120,2913,0.38448335,-1793,Undershoot
 min,2019,WHG-CS,ssb,42819,42819,1,0,Correct
-cod-cs,2019,COD-CS,landings,0,42819,0,-42819,Undershoot
+cod-cs,2019,COD-CS,landings,0,0,NA,0,Undershoot
 cod-cs,2019,HAD-CS,landings,1,3761,0.000265887,-3760,Undershoot
 cod-cs,2019,MON-CS,landings,7745,29293,0.264397638,-21548,Undershoot
 cod-cs,2019,N-HKE,landings,21430,128236,0.167113759,-106806,Undershoot

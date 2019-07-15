@@ -23,15 +23,37 @@ library(grid)
 #library(vmstools)
 options(scipen=999)
 
+# DT table option
+opt<-list( 
+  dom = "Blfrtip"
+  , buttons =  list(
+    extend = "collection"
+    , buttons = c("csv", "excel")
+    , text = "Download"
+  )  # end of buttons customization
+  
+  # customize the length menu
+  , lengthMenu = list( c(10, 20, -1) # declare values
+                       , c(10, 20, "All") # declare titles
+  ) # end of lengthMenu customization
+  , pageLength = 10
+  
+  
+) # end of option
+
 data_fish <-  read.csv(file="data/Hackathon/Data.csv") 
+MetierDes<-read.csv("data/MetierDescription.csv")
 CelticEcoSpecies <- read.csv("data/CaCS.csv")
 test <- aggregate(CelticEcoSpecies$Landings, by = list(CelticEcoSpecies$Country
                                                        , CelticEcoSpecies$Year, CelticEcoSpecies$lvl4, CelticEcoSpecies$Species), FUN = "sum")
 names(test) <- c("Country", "Year", "Metier", "Species", "Landings")
-testL2 <- as.data.frame(CelticEcoSpecies %>% group_by(Country, Year, lvl4, Species, Area)
+testArea <- aggregate(CelticEcoSpecies$Landings, by = list(CelticEcoSpecies$Country
+                                                       , CelticEcoSpecies$Year, CelticEcoSpecies$lvl4, CelticEcoSpecies$Species,CelticEcoSpecies$Area), FUN = "sum")
+names(testArea) <- c("Country", "Year", "Metier", "Species","Area" ,"Landings")
+testL2 <- as.data.frame(CelticEcoSpecies %>% group_by(Country, Year, lvl4, Species, Area,MeshSize)
                         %>% summarise(Weight_in_tonnes = sum(Landings), Value_in_Euros = sum(Value)))
 testL2$vpKG <- testL2$Value_in_Euros / (testL2$Weight_in_tonnes * 1000)
-names(testL2) <- c("Country", "Year", "Metier", "Species", "Area", "Landings", "Value_in_Euros", "Price_per_KG")
+names(testL2) <- c("Country", "Year", "Metier", "Species", "Area","Mesh Size", "Landings", "Value_in_Euros", "Price_per_KG")
 testL2$Landings <- round(testL2$Landings, 3)
 testL2$Value_in_Euros <- round(testL2$Value_in_Euros, 3)
 testL2$Price_per_KG <- round(testL2$Price_per_KG, 3)
@@ -80,7 +102,7 @@ server <- function(input, output, session) {
           )), class = "btn-link"
         )))
       }
-      else if (input$FishGear == "Gear Type") {
+      else if (input$FishGear == "Description of the Fisheries") {
         fluidRow(column(width = 3, div(
           style = "display: inline-block;vertical-align:top; width: 525px;",
           selectInput("GearInt", "", choices = c(
@@ -202,7 +224,7 @@ server <- function(input, output, session) {
         queen scallop, crab, lobster, and whelk ."
       ))
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Select Gear") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Select Gear") {
       img(
         src = "images/gear.jpg", height = "400px",
         width = "600px", style = "padding-top: 7px; padding-bottom: 5px; 
@@ -210,7 +232,7 @@ server <- function(input, output, session) {
       )
     }
     
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Otter trawl") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Otter trawl") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("Otter trawl is the main gear by effort used in demersal fisheries in the Celtic Sea ecoregion .
@@ -219,7 +241,7 @@ server <- function(input, output, session) {
              the catches consist of a mixture of different species.")
         )
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Nephrops-directed otter trawlers") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Nephrops-directed otter trawlers") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("Nephrops is an important target species on discrete muddy grounds within the ecoregion. Vessels typically,
@@ -231,7 +253,7 @@ server <- function(input, output, session) {
              both Nephrops and finfish in the Celtic Sea using a larger mesh size (100 mm or more).")
         )
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Finfish-directed otter trawlers and seiners") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Finfish-directed otter trawlers and seiners") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("Fish are targeted with both small (80-99 mm) and larger (> 99 mm) mesh sizes in different parts of the ecoregion,
@@ -242,7 +264,7 @@ server <- function(input, output, session) {
              tend to target gadoids, anglerfish, or rays.")
         )
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Deep-water trawl fisheries") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Deep-water trawl fisheries") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("Until 2016, deep-water trawl fisheries were conducted in ICES subareas 6 and 7, principally by France,
@@ -251,7 +273,7 @@ server <- function(input, output, session) {
              with a bycatch mainly of smoothheads and deep-water sharks on the continental slope and offshore banks of subareas 6 and 7.")
         )
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Beam-trawl fisheries") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Beam-trawl fisheries") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("Beam trawlers operate on sandy grounds in the Irish and Celtic seas and in the western English Channel. 
@@ -264,7 +286,7 @@ server <- function(input, output, session) {
              beam trawling, using 80-90 mm mesh, mainly targets sole and cuttlefish.")
         )
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Gillnet fisheries") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Gillnet fisheries") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("The main gillnet fishery, (mainly with 120 mm mesh size) in this ecoregion targets hake along the continental slope.
@@ -279,7 +301,7 @@ server <- function(input, output, session) {
              gillnetting at depths below 600 m.")
         )
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Longline and line fisheries") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Longline and line fisheries") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("Spanish-, French-, and UK-registered longliners target hake along the continental slope with bycatches of ling,
@@ -287,7 +309,7 @@ server <- function(input, output, session) {
              in divisions 7.e-f targeting mackerel, in an area where other fishing methods for this species are not permitted.")
         )
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Pelagic trawls") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Pelagic trawls") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("<b>Blue whiting </b <br/>  <br/> 
@@ -317,7 +339,7 @@ server <- function(input, output, session) {
              The fishery uses pelagic trawl nets with mesh sizes 32-54 mm.")
         )
     }
-    else if (input$FishGear == "Gear Type" & input$GearInt == "Other fisheries") {
+    else if (input$FishGear == "Description of the Fisheries" & input$GearInt == "Other fisheries") {
       div(
         style = " border-radius: 25px;background-color:#e7e1ef ;font-style:italic;color:#525252;padding: 15px 45px;",
         HTML("Sprat fisheries often develop in the south Minch and in Irish inshore waters 
@@ -328,6 +350,55 @@ server <- function(input, output, session) {
         )
     }
     })
+  output$MetInt <- function() {
+    if(input$Area1=="West of Scotland (Division 6.a) and Rockall (Division 6.b)"){
+    text_tbl <- filter(MetierDes,Area=="West of Scotland (Division 6.a) and Rockall (Division 6.b)")
+    text_tbl[-1] %>%
+      knitr::kable("html") %>%
+      kable_styling(full_width = F, font_size = 14)%>%
+      column_spec(c(1:3), background = "black", include_thead = TRUE, border_right = T) %>%
+      column_spec(1,width = "25em", bold = T, border_right = T, underline = T) %>%
+      column_spec(2, width = "25em", bold = T, border_right = T, underline = T) %>%
+      column_spec(3, width = "25em", bold = T) %>%
+      row_spec(c(1, 3, 5, 7,9,11), background = "lightyellow", color = "#525252") %>%
+      row_spec(c(2, 4, 6, 8,10), background = "lightgrey")  
+    }else if(input$Area1=="West of Ireland (divisions 7.b–c) and Celtic Sea slope (divisions 7.k–j)"){
+      text_tbl <- filter(MetierDes,Area=="West of Ireland (divisions 7.b–c) and Celtic Sea slope (divisions 7.k–j)")
+      text_tbl[-1] %>%
+        knitr::kable("html") %>%
+        kable_styling(full_width = F, font_size = 14)%>%
+        column_spec(c(1:3), background = "black", include_thead = TRUE, border_right = T) %>%
+        column_spec(1,width = "25em", bold = T, border_right = T, underline = T) %>%
+        column_spec(2, width = "25em", bold = T, border_right = T, underline = T) %>%
+        column_spec(3, width = "25em", bold = T) %>%
+        row_spec(c(1, 3, 5, 7,9), background = "lightyellow", color = "#525252") %>%
+        row_spec(c(2, 4, 6, 8), background = "lightgrey")  
+    }
+    else if(input$Area1=="Irish Sea (Division 7.a)"){
+      text_tbl <- filter(MetierDes,Area=="Irish Sea (Division 7.a)")
+      text_tbl[-1] %>%
+        knitr::kable("html") %>%
+        kable_styling(full_width = F, font_size = 14)%>%
+        column_spec(c(1:3), background = "black", include_thead = TRUE, border_right = T) %>%
+        column_spec(1,width = "25em", bold = T, border_right = T, underline = T) %>%
+        column_spec(2, width = "25em", bold = T, border_right = T, underline = T) %>%
+        column_spec(3, width = "25em", bold = T) %>%
+        row_spec(c(1, 3, 5, 7), background = "lightyellow", color = "#525252") %>%
+        row_spec(c(2, 4, 6, 8), background = "lightgrey") 
+    }}
+  
+  output$Metierdesc<- renderUI({
+    if(input$Area1 =="Select Area") {
+      img(src = "images/net.jpg", height = "400px",
+        width = "600px", style = "padding-top: 7px; padding-bottom: 5px; 
+        padding-right: 20px;"
+      )
+    }
+    else{tableOutput("MetInt")
+      
+    }
+  })
+    
   
   
   ################Hackathon  Work#################################
@@ -485,7 +556,13 @@ server <- function(input, output, session) {
   
   observeEvent(input$name, {
     output$L_selections <- renderUI({
-      if (input$Country == "BEL" & input$name == 1) {
+      if (input$Country == "All" & input$name == 1) {
+        fluidRow(
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieL", label = "Select Metier", levels(test$Metier), selectize = T), class = "btn-link")),
+          column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryear", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
+        )
+      }
+      else if (input$Country == "BEL" & input$name == 1) {
         fluidRow(
           column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieL", label = "Select Metier", levels(droplevels(filter(test, Country == "BEL")$Metier)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryear", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
@@ -537,6 +614,12 @@ server <- function(input, output, session) {
         fluidRow(
           column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieL", label = "Select Metier", levels(droplevels(filter(test, Country == "UK")$Metier)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryear", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
+        )
+      }
+      else if (input$Country == "All" & input$name == 2) {
+        fluidRow(
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieL1", label = "Select Species", levels(test$Species), selectize = T), class = "btn-link")),
+          column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryear1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$Country == "BEL" & input$name == 2) {
@@ -602,6 +685,7 @@ server <- function(input, output, session) {
   output$plotL1 <-
     renderPlotly({
       if (input$name == 1) {
+        if(input$Country!="All"){
         p <- ggplot(f(), aes(Year, Landings, fill = Species)) +
           geom_bar(stat = "identity", position = "fill") +
           ggtitle("The proportion of each landed species by level 5 metier.") +
@@ -618,8 +702,26 @@ server <- function(input, output, session) {
         p <- p + guides(fill = guide_legend(nrow = 2, byrow = T))
         ggplotly(p) %>%
           layout(legend = list(orientation = "h", x = 0.3, y = -0.2, bgcolor = "grey", xanchor = "center"))
+        }
+        else{  p <- ggplot(test, aes(Year, Landings, fill = Species)) +
+          geom_bar(stat = "identity", position = "fill") +
+          ggtitle("The proportion of each landed species by level 5 metier.") +
+          ylab("") +
+          xlab("Year") + scale_x_continuous(breaks = test$Year) +
+          theme(
+            legend.position = "bottom", legend.text = element_text(size = 6),
+            strip.background = element_blank(), axis.text.x = element_text(
+              angle = 90,
+              hjust = 1
+            ), axis.text = element_text(size = 6), panel.spacing.x = unit(0.05, "lines"), panel.spacing.y = unit(0.5, "lines")
+          )
+        p <- p + facet_wrap(. ~ Metier)
+        p <- p + guides(fill = guide_legend(nrow = 2, byrow = T))
+        ggplotly(p) %>%
+          layout(legend = list(orientation = "h", x = 0.3, y = -0.2, bgcolor = "grey", xanchor = "center"))}
       }
       else if (input$name == 2) {
+        if(input$Country!="All"){
         p <- ggplot(f(), aes(Year, Landings, fill = Metier)) +
           geom_bar(stat = "identity", position = "fill") +
           ggtitle("The proportion of each landed species by level 5 métier.") +
@@ -637,14 +739,35 @@ server <- function(input, output, session) {
             x = 0.3, y = -0.2, bgcolor = "grey", xanchor = "center"
           )) %>%
           style(legendgroup = NULL)
-      }
+        }
+        else{ p <- ggplot(test, aes(Year, Landings, fill = Metier)) +
+          geom_bar(stat = "identity", position = "fill") +
+          ggtitle("The proportion of each landed species by level 5 métier.") +
+          ylab("") +
+          xlab("Year") + scale_x_continuous(breaks = test$Year) +
+          theme(
+            legend.position = "bottom", legend.text = element_text(size = 6), axis.text = element_text(size = 6),
+            panel.spacing.x = unit(0.05, "lines"), panel.spacing.y = unit(0.5, "lines"),
+            strip.background = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1)
+          )
+        p <- p + facet_wrap(. ~ Species)
+        ggplotly(p) %>%
+          layout(xaxis = list(hoverformat = ".2f"), legend = list(
+            orientation = "h",
+            x = 0.3, y = -0.2, bgcolor = "grey", xanchor = "center"
+          )) %>%
+          style(legendgroup = NULL)}}
     })
   
   f1 <- reactive({
-    filter(test, Country == input$Country, Year == input$pieslideryear & Metier == input$pieL)
+    if(input$Country!="All"){
+    filter(test, Country == input$Country, Year == input$pieslideryear & Metier == input$pieL)}
+    else{filter(test, Year == input$pieslideryear & Metier == input$pieL)}
   })
   f2 <- reactive({
-    filter(test, Country == input$Country, Year == input$pieslideryear1 & Species == input$pieL1)
+    if(input$Country!="All"){
+    filter(test, Country == input$Country, Year == input$pieslideryear1 & Species == input$pieL1)}
+    else{filter(test,Year == input$pieslideryear1 & Species == input$pieL1)}
   })
   output$pie1Plot <-
     renderPlotly({
@@ -656,7 +779,7 @@ server <- function(input, output, session) {
             yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
             legend = list(list(x = 0.35, y = 0.5))
           )
-      }
+        }
       else if (input$name == 2) {
         plot_ly() %>%
           add_pie(data = f2(), labels = ~Metier, values = ~Landings) %>%
@@ -686,7 +809,6 @@ server <- function(input, output, session) {
       }
     }
   })
-  
   
   ###############Page2#########################
   observeEvent(input$info2, {
@@ -802,81 +924,34 @@ server <- function(input, output, session) {
   
   output$tabplotL21 <- renderDataTable({
     if (input$Landings1 == "Weight in tonnes") {
+      out <- test1()[test1()$Species %in% selected_page21(), ][-c(2, 3, 8, 9)]
+      if (nrow(out) < 1) {
+        return(NULL)
+      }
+      row.names(out) <- NULL
+      colnames(out) <- c("Country", "Species", "Area","Mesh Size", "Landings in tonnes")
+      datatable(out,  extensions = 'Buttons'
+                , options = opt)
+    }
+    else if (input$Landings1 == "Value in Euros") {
+      out <- test1()[test1()$Species %in% selected_page21(), ][-c(2, 3, 7, 9)]
+      if (nrow(out) < 1) {
+        return(NULL)
+      }
+      row.names(out) <- NULL
+      colnames(out) <- c("Country", "Species", "Area", "Mesh Size","Value in Euros")
+      datatable(out, extensions = 'Buttons'
+                , options = opt)
+    }
+    else if (input$Landings1 == "Price per KG") {
       out <- test1()[test1()$Species %in% selected_page21(), ][-c(2, 3, 7, 8)]
       if (nrow(out) < 1) {
         return(NULL)
       }
       row.names(out) <- NULL
-      colnames(out) <- c("Country", "Species", "Area", "Landings in tonnes")
-      datatable(out,  extensions = 'Buttons'
-                , options = list( 
-                  paging = T,
-                  dom = "Blfrtip"
-                  , buttons =  list(
-                    extend = "collection"
-                    , buttons = c("csv", "excel")
-                    , text = "Download"
-                  )  # end of buttons customization
-                  
-                  # customize the length menu
-                  , lengthMenu = list( c(10, 20, -1) # declare values
-                                       , c(10, 20, "All") # declare titles
-                  ) # end of lengthMenu customization
-                  , pageLength = 10
-                  
-                  
-                ))
-    }
-    else if (input$Landings1 == "Value in Euros") {
-      out <- test1()[test1()$Species %in% selected_page21(), ][-c(2, 3, 6, 8)]
-      if (nrow(out) < 1) {
-        return(NULL)
-      }
-      row.names(out) <- NULL
-      colnames(out) <- c("Country", "Species", "Area", "Value in Euros")
+      colnames(out) <- c("Country", "Species", "Area", "Mesh Size","Price per KG")
       datatable(out, extensions = 'Buttons'
-                , options = list( 
-                  paging = T,
-                  dom = "Blfrtip"
-                  , buttons =  list(
-                    extend = "collection"
-                    , buttons = c("csv", "excel")
-                    , text = "Download"
-                  )  # end of buttons customization
-                  
-                  # customize the length menu
-                  , lengthMenu = list( c(10, 20, -1) # declare values
-                                       , c(10, 20, "All") # declare titles
-                  ) # end of lengthMenu customization
-                  , pageLength = 10
-                  
-                  
-                ))
-    }
-    else if (input$Landings1 == "Price per KG") {
-      out <- test1()[test1()$Species %in% selected_page21(), ][-c(2, 3, 6, 7)]
-      if (nrow(out) < 1) {
-        return(NULL)
-      }
-      row.names(out) <- NULL
-      colnames(out) <- c("Country", "Species", "Area", "Price per KG")
-      datatable(out, extensions = 'Buttons'
-                , options = list( paging = T,
-                                  dom = "Blfrtip"
-                                  , buttons =  list(
-                                    extend = "collection"
-                                    , buttons = c("csv", "excel")
-                                    , text = "Download"
-                                  )  # end of buttons customization
-                                  
-                                  # customize the length menu
-                                  , lengthMenu = list( c(10, 20, -1) # declare values
-                                                       , c(10, 20, "All") # declare titles
-                                  ) # end of lengthMenu customization
-                                  , pageLength = 10
-                                  
-                                  
-                ))
+                , options = opt)
     }
   })
   
@@ -993,79 +1068,34 @@ server <- function(input, output, session) {
   
   output$tabplotL22 <- renderDataTable({
     if (input$Landings2 == "Weight in tonnes") {
+      out <- test2()[test2()$Metier %in% selected_pageL22(), ][-c(2, 4, 8, 9)]
+      if (nrow(out) < 1) {
+        return(NULL)
+      }
+      row.names(out) <- NULL
+      colnames(out) <- c("Country", "Metier", "Area","Mesh Size", "Landings in tonnes")
+      datatable(out, extensions = 'Buttons'
+                , options = opt) # end of option)
+    }
+    else if (input$Landings2 == "Value in Euros") {
+      out <- test2()[test2()$Metier %in% selected_pageL22(), ][-c(2, 4, 7, 9)]
+      if (nrow(out) < 1) {
+        return(NULL)
+      }
+      row.names(out) <- NULL
+      colnames(out) <- c("Country", "Metier", "Area","Mesh Size", "Value in Euros")
+      datatable(out, extensions = 'Buttons'
+                , options = opt) # end of option)
+    }
+    else if (input$Landings2 == "Price per KG") {
       out <- test2()[test2()$Metier %in% selected_pageL22(), ][-c(2, 4, 7, 8)]
       if (nrow(out) < 1) {
         return(NULL)
       }
       row.names(out) <- NULL
-      colnames(out) <- c("Country", "Metier", "Area", "Landings in tonnes")
+      colnames(out) <- c("Country", "Metier", "Area","Mesh Size" ,"Price per KG")
       datatable(out, extensions = 'Buttons'
-                , options = list( 
-                  dom = "Blfrtip"
-                  , buttons =  list(
-                    extend = "collection"
-                    , buttons = c("csv", "excel")
-                    , text = "Download"
-                  )  # end of buttons customization
-                  
-                  # customize the length menu
-                  , lengthMenu = list( c(10, 20, -1) # declare values
-                                       , c(10, 20, "All") # declare titles
-                  ) # end of lengthMenu customization
-                  , pageLength = 10
-                  
-                  
-                )) # end of option)
-    }
-    else if (input$Landings2 == "Value in Euros") {
-      out <- test2()[test2()$Metier %in% selected_pageL22(), ][-c(2, 4, 6, 8)]
-      if (nrow(out) < 1) {
-        return(NULL)
-      }
-      row.names(out) <- NULL
-      colnames(out) <- c("Country", "Metier", "Area", "Value in Euros")
-      datatable(out, extensions = 'Buttons'
-                , options = list( 
-                  dom = "Blfrtip"
-                  , buttons =  list(
-                    extend = "collection"
-                    , buttons = c("csv", "excel")
-                    , text = "Download"
-                  )  # end of buttons customization
-                  
-                  # customize the length menu
-                  , lengthMenu = list( c(10, 20, -1) # declare values
-                                       , c(10, 20, "All") # declare titles
-                  ) # end of lengthMenu customization
-                  , pageLength = 10
-                  
-                  
-                )) # end of option)
-    }
-    else if (input$Landings2 == "Price per KG") {
-      out <- test2()[test2()$Metier %in% selected_pageL22(), ][-c(2, 4, 6, 7)]
-      if (nrow(out) < 1) {
-        return(NULL)
-      }
-      row.names(out) <- NULL
-      colnames(out) <- c("Country", "Metier", "Area", "Price per KG")
-      datatable(out, extensions = 'Buttons'
-                , options = list( 
-                  dom = "Blfrtip"
-                  , buttons =  list(
-                    extend = "collection"
-                    , buttons = c("csv", "excel")
-                    , text = "Download"
-                  )  # end of buttons customization
-                  
-                  # customize the length menu
-                  , lengthMenu = list( c(10, 20, -1) # declare values
-                                       , c(10, 20, "All") # declare titles
-                  ) # end of lengthMenu customization
-                  , pageLength = 10
-                  
-                  
-                ) # end of option
+                , options = opt# end of option
       )
     }
   })
@@ -1097,7 +1127,7 @@ server <- function(input, output, session) {
   
   ###############Page3#########################
   output$tableL <- DT::renderDataTable(DT::datatable({
-    L <- CelticEcoSpecies[-c(1,2)]
+    L <- CelticEcoSpecies[-c(1,2,3)]
     if (input$LCountry != "All") {
       L <- filter(L, Country %in% input$LCountry)
     }
@@ -1115,22 +1145,7 @@ server <- function(input, output, session) {
     }
     L
   }, extensions = 'Buttons'
-  , options = list( 
-    dom = "Blfrtip"
-    , buttons =  list(
-      extend = "collection"
-      , buttons = c("csv", "excel")
-      , text = "Download"
-    )  # end of buttons customization
-    
-    # customize the length menu
-    , lengthMenu = list( c(10, 20, -1) # declare values
-                         , c(10, 20, "All") # declare titles
-    ) # end of lengthMenu customization
-    , pageLength = 10
-    
-    
-  ))) # end of option))
+  , options = opt)) # end of option))
   
   
   
@@ -1158,7 +1173,13 @@ server <- function(input, output, session) {
   
   observeEvent(input$nameE, {
     output$E_selections <- renderUI({
-      if (input$CountryE == "BEL" & input$nameE == 1) {
+      if (input$CountryE == "All" & input$nameE == 1) {
+        fluidRow(
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE", label = "Select Metier", levels(testE$Metier), selectize = T), class = "btn-link")),
+          column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
+        )
+      }
+      else if (input$CountryE == "BEL" & input$nameE == 1) {
         fluidRow(
           column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE", label = "Select Metier", levels(droplevels(filter(testE, Country == "BEL")$Metier)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
@@ -1219,63 +1240,69 @@ server <- function(input, output, session) {
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
+      else if (input$CountryE == "All" & input$nameE == 2) {
+        fluidRow(
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(testE$Vessel_length), selectize = T), class = "btn-link")),
+          column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
+        )
+      }
       else if (input$CountryE == "BEL" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "BEL")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "BEL")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "DE" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "DE")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "DE")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "ES" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "ES")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "ES")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "FRA" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "FRA")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "FRA")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "GG" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "GG")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "GG")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "IE" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "IE")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "IE")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "IM" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "IM")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "IM")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "JE" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "JE")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "JE")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "NLD" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "NLD")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "NLD")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
       else if (input$CountryE == "UK" & input$nameE == 2) {
         fluidRow(
-          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Select Metier", levels(droplevels(filter(testE, Country == "UK")$Vessel_length)), selectize = T), class = "btn-link")),
+          column(width = 2, offset = 2, div(style = "display: inline-block;vertical-align:top; width: 120px;", selectInput("pieE1", label = "Vessel length", levels(droplevels(filter(testE, Country == "UK")$Vessel_length)), selectize = T), class = "btn-link")),
           column(width = 2, div(style = "display: inline-block;vertical-align:top; width: 150px;", sliderInput("pieslideryearE1", "Choose Year:", min = 2009, max = 2017, value = 2017, step = NULL, sep = "", animate = TRUE), class = "btn-link"))
         )
       }
@@ -1289,6 +1316,7 @@ server <- function(input, output, session) {
   output$plotE1 <-
     renderPlotly({
       if (input$nameE == 1) {
+        if(input$CountryE!="All"){
         p <- ggplot(fE(), aes(Year, KW_Day, fill = Vessel_length)) +
           geom_bar(stat = "identity", position = "fill") +
           ggtitle("The proportion of Vessel type Effort by level 5 métier.") +
@@ -1305,8 +1333,25 @@ server <- function(input, output, session) {
         p <- p + guides(fill = guide_legend(nrow = 2, byrow = T))
         ggplotly(p) %>%
           layout(legend = list(orientation = "h", x = 0.3, y = -0.2, bgcolor = "grey", xanchor = "center"))
-      }
+        }
+        else{p <- ggplot(testE, aes(Year, KW_Day, fill = Vessel_length)) +
+          geom_bar(stat = "identity", position = "fill") +
+          ggtitle("The proportion of Vessel type Effort by level 5 métier.") +
+          # ylab("The proportion of total Effort") +
+          xlab("Year") + scale_x_continuous(breaks = testE$Year) +
+          theme(
+            legend.position = "bottom", legend.text = element_text(size = 6),
+            strip.background = element_blank(), axis.text.x = element_text(
+              angle = 90,
+              hjust = 1
+            ), axis.text = element_text(size = 6), panel.spacing.x = unit(0.05, "lines"), panel.spacing.y = unit(0.5, "lines")
+          )
+        p <- p + facet_wrap(. ~ Metier)
+        p <- p + guides(fill = guide_legend(nrow = 2, byrow = T))
+        ggplotly(p) %>%
+          layout(legend = list(orientation = "h", x = 0.3, y = -0.2, bgcolor = "grey", xanchor = "center"))}}
       else if (input$nameE == 2) {
+        if(input$CountryE!="All"){
         p <- ggplot(fE(), aes(Year, KW_Day, fill = Metier)) +
           geom_bar(stat = "identity", position = "fill") +
           ggtitle("The proportion of each level 5 métier  Effort by Vessel Length.") +
@@ -1323,14 +1368,34 @@ server <- function(input, output, session) {
         ggplotly(p) %>%
           layout(xaxis = list(hoverformat = ".2f"), legend = list(orientation = "h", x = 0.3, y = -0.2, bgcolor = "grey", xanchor = "center")) %>%
           style(legendgroup = NULL)
-      }
+        }
+        else{ p <- ggplot(testE, aes(Year, KW_Day, fill = Metier)) +
+          geom_bar(stat = "identity", position = "fill") +
+          ggtitle("The proportion of each level 5 métier  Effort by Vessel Length.") +
+          ylab("The proportion of total Effort") +
+          xlab("Year") + scale_x_continuous(breaks = testE$Year) +
+          theme(
+            legend.position = "bottom", legend.text = element_text(size = 6), axis.text = element_text(size = 6), panel.spacing.x = unit(0.05, "lines"), panel.spacing.y = unit(0.5, "lines"),
+            strip.background = element_blank(), axis.text.x = element_text(
+              angle = 90,
+              hjust = 1
+            )
+          )
+        p <- p + facet_wrap(. ~ Vessel_length)
+        ggplotly(p) %>%
+          layout(xaxis = list(hoverformat = ".2f"), legend = list(orientation = "h", x = 0.3, y = -0.2, bgcolor = "grey", xanchor = "center")) %>%
+          style(legendgroup = NULL)}}
     })
   
   f3 <- reactive({
-    filter(testE2, Country == input$CountryE, Year == input$pieslideryearE & Metier == input$pieE)
+    if(input$CountryE!="All"){
+    filter(testE2, Country == input$CountryE, Year == input$pieslideryearE & Metier == input$pieE)}
+    else{filter(testE2, Year == input$pieslideryearE & Metier == input$pieE)}
   })
   f4 <- reactive({
-    filter(testE2, Country == input$CountryE, Year == input$pieslideryearE1 & Vessel_length == input$pieE1)
+    if(input$CountryE!="All"){
+    filter(testE2, Country == input$CountryE, Year == input$pieslideryearE1 & Vessel_length == input$pieE1)}
+    else{ filter(testE2, Year == input$pieslideryearE1 & Vessel_length == input$pieE1)}
   })
   
   
@@ -1361,7 +1426,7 @@ server <- function(input, output, session) {
   output$pieEUI <- renderUI({
     if (input$nameE == 1) {
       if (dim(f3())[1] == 0) {
-        h4(paste("No data available for", input$pieE, "in", input$pieslideryearE, sep = " "))
+        h4(paste("No data available for",input$CountryE, ":",input$pieE, "in", input$pieslideryearE, sep = " "))
       }
       else {
         plotlyOutput("pieE1Plot")
@@ -1369,7 +1434,7 @@ server <- function(input, output, session) {
     }
     else if (input$nameE == 2) {
       if (dim(f4())[1] == 0) {
-        h4(paste("No data available for", input$pieE1, "in", input$pieslideryearE1, sep = " "))
+        h4(paste("No data available for",input$CountryE, ":", input$pieE1, "in", input$pieslideryearE1, sep = " "))
       }
       else {
         plotlyOutput("pieE1Plot")
@@ -1442,22 +1507,7 @@ server <- function(input, output, session) {
     }
     row.names(out) <- NULL
     datatable(out, extensions = 'Buttons'
-              , options = list( 
-                dom = "Blfrtip"
-                , buttons =  list(
-                  extend = "collection"
-                  , buttons = c("csv", "excel")
-                  , text = "Download"
-                )  # end of buttons customization
-                
-                # customize the length menu
-                , lengthMenu = list( c(10, 20, -1) # declare values
-                                     , c(10, 20, "All") # declare titles
-                ) # end of lengthMenu customization
-                , pageLength = 10
-                
-                
-              ))
+              , options = opt)
   })
   
   
@@ -1524,22 +1574,7 @@ server <- function(input, output, session) {
     }
     row.names(out) <- NULL
     datatable(out, extensions = 'Buttons'
-              , options = list( 
-                dom = "Blfrtip"
-                , buttons =  list(
-                  extend = "collection"
-                  , buttons = c("csv", "excel")
-                  , text = "Download"
-                )  # end of buttons customization
-                
-                # customize the length menu
-                , lengthMenu = list( c(10, 20, -1) # declare values
-                                     , c(10, 20, "All") # declare titles
-                ) # end of lengthMenu customization
-                , pageLength = 10
-                
-                
-              ))
+              , options = opt)
   })
   
   
@@ -1594,22 +1629,7 @@ server <- function(input, output, session) {
     }
     E
   }, extensions = 'Buttons'
-  , options = list( 
-    dom = "Blfrtip"
-    , buttons =  list(
-      extend = "collection"
-      , buttons = c("csv", "excel")
-      , text = "Download"
-    )  # end of buttons customization
-    
-    # customize the length menu
-    , lengthMenu = list( c(10, 20, -1) # declare values
-                         , c(10, 20, "All") # declare titles
-    ) # end of lengthMenu customization
-    , pageLength = 10
-    
-    
-  )))
+  , options =opt ))
   
   ###########Existing tools##########################
   ############## 3. Effort app #######################
@@ -1625,11 +1645,11 @@ server <- function(input, output, session) {
     )
   })
   output$fleet.countryfilter <- renderUI({
-    selectInput("country","Country",c("All",sort(unique(as.character(partF()$country)))),selected="All")
+    selectInput("country","Country",c("All",sort(unique(as.character(partF()$country)))),selected="ALL")
   })
   
   output$time.countryfilter <- renderUI({
-    selectInput("country1","Country:",c("All",sort(unique(as.character(partF()$country)))),selected="All"
+    selectInput("country1","Country:",c(sort(unique(as.character(partF()$country)))),selected="BE"
     )})
   
   output$efftable <- DT::renderDataTable(DT::datatable({
@@ -1645,18 +1665,20 @@ server <- function(input, output, session) {
     }
     data[,c("effort","effshare")] <- round(data[,c("effort","effshare")],2) 
     data
-  })) 
+  }, extensions = 'Buttons',options = opt)) 
   
-  output$plotEffTS <- renderPlot({
+  output$plotEffTS <- renderPlotly({
     dataplot1 <- partF()
     dataplot1$effmet <- dataplot1$effort*dataplot1$effshare
-    if (input$country1 != "All") {
+  
       dataplot1  <- dataplot1[dataplot1$country %in% input$country1,]
-    }
-    print(ggplot(dataplot1, aes(x = year, y = effmet,group=metier)) +
-            geom_point(aes(colour = factor(metier))) + geom_line(aes(group = metier)) +
-            facet_wrap(~fleet,scales="free_y") +
-            theme_bw())
+  
+    p<-ggplot(dataplot1, aes(x = year, y = effmet)) +
+            geom_point(aes(colour = metier)) + geom_line(aes(colour = metier)) +
+            facet_wrap(~fleet,ncol=1,scales="free_y") +ylab("Effort")+xlab("Year")+
+            theme_bw()
+     p <- ggplotly(p)
+     p %>% layout(hovermode = "compare",margin = list(l = 275, b =75))
   })                  
   
   output$plotEff_Fl <- renderPlot({
@@ -1692,8 +1714,10 @@ server <- function(input, output, session) {
       readRDS("data/existing_tools/4.catchability_app/data/Celtic_Sea/CScatchability.rds")
     }
   )
+  
+
   output$table.yearfilter <- renderUI({
-    selectInput("year","Year:",c("All",sort(unique(as.character(catchability()$year)),decreasing=TRUE))
+    selectInput("year2","Year:",c("All",sort(unique(as.character(catchability()$year)),decreasing=TRUE))
     )
   })
   output$table.stockfilter <- renderUI({
@@ -1701,41 +1725,78 @@ server <- function(input, output, session) {
     )
   })
   output$plot.countryfilter <- renderUI({
-    selectInput("country","Country:",c("All",sort(unique(as.character(catchability()$country))))
+    selectInput("country2","Country:",c(sort(unique(as.character(catchability()$country)))),
+                selected =sort(unique(as.character(catchability()$country)))[1] 
     )
   })
   output$plot.stockfilter <- renderUI({
-    selectInput("stock","Stock:",c("All",sort(unique(as.character(catchability()$stock)))),
-                multiple=TRUE, selected="All"
+    selectInput("stock","Stock:",c(sort(unique(as.character(catchability()$stock)))),
+                multiple=TRUE
     )
   })
   
+  output$plot2.fleetfilter <- renderUI({
+    selectInput("fleetP2","Fleet:",c(sort(unique(as.character(catchability()$fleet)))),
+                selected =sort(unique(as.character(catchability()$fleet)))[1] 
+    )
+  })
+  
+
+  
+
+
+  
+  
   output$Catchtable <- DT::renderDataTable(DT::datatable({
     data <- catchability()[,c("year","stock","fleet", "metier","logq","country")]
-    if (input$year != "All") {
-      data <- data[data$year == input$year,]
+    if (input$year2 != "All") {
+      data <- data[data$year == input$year2,]
     }
     if (input$Stock != "All") {
       data <- data[data$stock == input$Stock,]
     }
     data[,c("logq")] <- round(data[,c("logq")], 2)
     data[,c("year","country","fleet","metier","stock","logq")]
-  }))
+  }, extensions = 'Buttons',options = opt))
   
   output$plotCatchability <- renderPlot({
     data <- catchability()
-    if (input$country != "All") {
-      data <- data[data$country %in% input$country,]
-    }
-    if (input$stock != "All") {
-      data <- data[data$stock %in% input$stock,]
-    }
+   
+      data <- data[data$country %in% input$country2,]
+     
+      if (any(length(input$stock)>1 | input$stock != "All")) {
+        data <- data[data$stock %in% input$stock,]
+      }
+  #remove OTH
+    data <- data[data$metier!="OTH",]
+    
+   p<-ggplot(data, aes(x = year, y = logq )) +
+            geom_point(aes(colour=stock)) + geom_smooth(method = loess, fullrange = FALSE,aes(colour=stock)) +
+            facet_wrap(fleet ~ metier,scales="free_y") +ylab("log(Q)")+xlab("Year")+
+            theme_bw() + scale_x_continuous(breaks = seq(2009,2017))
+   
+   p# <- ggplotly(p)
+   
+  # p %>% layout(tooltip="text",margin = list(l = 150, b =75))
+  })
+  
+  
+  output$plot2Catchability<-renderPlotly({
+    data <- catchability()
+    
+    data <- data[data$fleet %in% input$fleetP2,]
+   
     #remove OTH
     data <- data[data$metier!="OTH",]
-    print(ggplot(data, aes(x = year, y = logq,group=stock)) +
-            geom_point(aes(colour=stock)) + geom_smooth(method = loess, fullrange = FALSE,aes(colour=stock)) +
-            facet_wrap(fleet ~ metier,scales="free_y") +
-            theme_bw())# + scale_x_continuous(breaks = seq(2004,2014,by=4)))
+    
+    p<-ggplot(data, aes(x = year, y = logq )) +
+      geom_point(aes(colour=metier)) + geom_line(aes(colour=metier)) +
+      facet_wrap( ~ stock,scales="free_y",ncol=1) +ylab("log(Q)")+xlab("Year")+
+      theme_bw() + scale_x_continuous(breaks = seq(2009,2017))
+    
+    p <- ggplotly(p)
+    
+     p %>% layout(tooltip="text",margin = list(l = 275, b =75))
   })
   
   ################### 5. Partial F app #########################
@@ -1745,12 +1806,14 @@ server <- function(input, output, session) {
   output$PF.stock.table <- renderUI({
     selectInput("Stock3","Stock",c("All",sort(unique(as.character(partF()$stock)))))
   })
+ 
   output$PF.country.plot1 <- renderUI({
-    selectInput("country","Country:",c("All",sort(unique(as.character(partF()$country)))),selected = 'BE')
+    selectInput("country3","Country:",c(sort(unique(as.character(partF()$country)))),
+                selected =sort(unique(as.character(partF()$country)))[1] )
   })
   output$PF.stock.plot1 <- renderUI({
-    selectInput("stock", "Stock:",c("All",sort(unique(as.character(partF()$stock)))),
-                multiple=TRUE,selected = 'All')
+    selectInput("stock3", "Stock:",c(sort(unique(as.character(partF()$stock)))),
+                multiple=TRUE)
   })
   output$PF.year.plot2 <- renderUI({
     selectInput("year_","Year:",c("All",sort(unique(as.character(partF()$year)),
@@ -1766,12 +1829,12 @@ server <- function(input, output, session) {
     if (input$year3 != "All") {
       data <- data[data$year == input$year3,]
     }
-    if (input$Stock != "All") {
-      data <- data[data$stock == input$Stock,]
+    if (input$Stock3 != "All") {
+      data <- data[data$stock == input$Stock3,]
     }
     data[,c("partF")] <- round(data[,c("partF")],8)
     data[,c("year","country","fleet","metier","stock","partF")]
-  }))
+  }, extensions = 'Buttons',options = opt))
   
   output$plotPartialF <- renderPlot({
     data <- partF()
@@ -1779,12 +1842,12 @@ server <- function(input, output, session) {
                                                   fleet=data$fleet, metier=data$metier,country=data$country),sum)
     data <- merge(data,aggregate(data$partF,list(year=data$year,stock=data$stock),sum,na.rm=T))
     data$percent <- data$partF/data$x
-    if (input$country != "All") {
-      data <- data[data$country %in% input$country,]
-    }
+  
+      data <- data[data$country %in% input$country3,]
     
-    if (any(length(input$stock)>1 | input$stock != "All")) {
-      data <- data[data$stock %in% input$stock,]
+    
+    if (any(length(input$stock3)>1 | input$stock3 != "All")) {
+      data <- data[data$stock %in% input$stock3,]
     }
     
     data <- subset(data, !is.na(percent))
@@ -1792,10 +1855,14 @@ server <- function(input, output, session) {
     #remove OTH
     data <- data[data$metier!="OTH",]
     
-    print(ggplot(data, aes(x = year, y = percent,group=stock)) +
-            geom_point(aes(colour = factor(stock))) + geom_smooth(method = lm, fullrange = FALSE, aes(colour = factor(stock))) +
-            facet_wrap(fleet ~ metier,scales="free_y") +
-            theme_bw() + scale_x_continuous(breaks = seq(2004,2014,by=4)))
+    p<-ggplot(data, aes(x = year, y = percent)) +
+            geom_point(aes(colour = stock)) + geom_smooth(method = lm, fullrange = FALSE, aes(colour = stock)) +
+            facet_wrap(fleet ~ metier,scales="free_y") +xlab("Year")
+            theme_bw() #+ scale_x_continuous(breaks = seq(2004,2014,by=4)))
+    
+    p# <- ggplotly(p)
+    
+   # p %>% layout(margin = list( b =75))
   })
   
   output$Spiderplot <- renderPlot({
@@ -1824,6 +1891,159 @@ server <- function(input, output, session) {
                   ))
     )
   })
+  
+  ################### 6. Quota Share app #########################
+  
+  
+  quotashare <- reactive(
+    if(input$Area_selector == "North_Sea") {
+      readRDS("data/existing_tools/6.quota_share_app/data/North_Sea/NSquotashare.rds")
+      
+    }else if(input$Area_selector == "Celtic_Sea") {
+      readRDS("data/existing_tools/6.quota_share_app/data/Celtic_Sea/CSquotashare.rds")
+    })
+  
+  quotashare1 <- reactive(
+    if(input$Area_selector == "North_Sea") {
+      readRDS("data/existing_tools/6.quota_share_app/data/North_Sea/NSquotashare1.rds")
+      
+    }else if(input$Area_selector == "Celtic_Sea") {
+      readRDS("data/existing_tools/6.quota_share_app/data/Celtic_Sea/CSquotashare1.rds")
+    })
+  
+
+  
+  output$QS.year.table <- renderUI({
+    selectInput("year4","Year:", c("All",sort(unique(as.character(quotashare()$year)),decreasing=T)))
+  })
+  output$QS.stock.table <- renderUI({
+    selectInput("Stock4","Stock",
+                c("All",sort(unique(as.character(quotashare()$stock)))))
+  })
+  
+  output$QS.fleet.plot1 <- renderUI({
+    selectInput("fleet4","Fleet:",c(sort(unique(as.character(quotashare()$fleet))))
+               ,selected =sort(unique(as.character(quotashare()$fleet)))[1] )
+  })
+  output$QS.stock.plot1 <- renderUI({ 
+    selectInput("stock5","Stock:", c(sort(unique(as.character(quotashare()$stock)))),
+                                                  multiple=TRUE )
+  })
+  
+  output$QS.fleet.plot2 <- renderUI({ 
+    selectInput("fleet5","Fleet:", c(sort(unique(as.character(quotashare()$fleet)))),
+                multiple=TRUE,selected =sort(unique(as.character(quotashare()$fleet)))[1])
+  })
+  
+
+  output$QS.stock.plot3 <- renderUI({ 
+    selectInput("stock6","Stock:", c(sort(unique(as.character(quotashare1()$stock)))),
+                multiple=FALSE)
+  }) 
+  
+  output$QS.year.plot3 <- renderUI({ 
+    selectInput("year6","Year",c(sort(unique(quotashare1()$year))))
+  }) 
+  
+  output$QS.landings.plot3 <- renderUI({ 
+    sliderInput("plim", "percentage of stock landings", 0, 100, 80)
+  }) 
+ 
+   
+  
+  output$QStable <- DT::renderDataTable(DT::datatable({
+    data_tab<-quotashare1()
+    if (input$year4 != "All") {
+      data_tab <- data_tab[data_tab$year == input$year4,]
+    }
+    if (input$Stock4 != "All") {
+      data_tab <- data_tab[data_tab$stock == input$Stock4,]
+    }
+    
+    data_tab[,c("year","fleet","stock","landings","proportion_fleet_landings", "stock_landings_share")]
+  }, extensions = 'Buttons',options = opt))
+  
+  output$plotQS <- renderPlotly({
+    data<-quotashare()
+    data <- aggregate(list(Share=data$relstab),list(year=data$year,stock=data$stock,
+                                                    fleet=data$fleet),sum)
+    
+      data <- data[data$fleet %in% input$fleet4,]
+      if (any(length(input$stock5)>1 | input$stock5 != "All")) {
+        data <- data[data$stock %in% input$stock5,]
+      }
+    
+    
+   p<-ggplot(data, aes(x = year, y = Share)) +
+            geom_point(aes(colour = stock), size = 2) + 
+            geom_line(aes(colour = stock)) +
+            facet_wrap(~ fleet,scales="free_y",ncol = 2) +
+            theme_bw() + theme(axis.text.x = element_text(angle = - 90)) 
+   
+   p<- ggplotly(p)
+    p %>% layout(hovermode = "compare",margin = list(l = 230, b =75))
+  })
+  
+  output$plotQScomp <- renderPlotly({
+    data<-quotashare()
+    if (input$fleet5 != "All") {
+      data <- data[data$fleet %in% input$fleet5,]
+    }
+    
+   p<-ggplot(data, aes(x = year, y = catchcomp,group=fleet)) +
+            geom_bar(stat = 'identity', aes(fill = stock)) +
+            facet_wrap(~ fleet,scales="free_y",ncol=2) + geom_text(aes(x = year, y = 0.9, label = round(fleet_landings,0))) + 
+            theme_bw() + theme(axis.text.x = element_text(angle = - 90)) + coord_flip()
+   ggplotly(p)
+    
+  })
+  
+  
+  output$plotCompLandings <- renderPlot({
+    data_tab<-quotashare1()
+ # for the chosen stock, which fleets are the most important
+    dats <- data_tab[data_tab$year == input$year6,]
+    dats <- dats[dats$stock == as.character(input$stock6),]
+    dats <- dats[order(dats$stock_landings_share),]
+    # select fleets contribute to XX% (input$plim) of the landings
+    dats <- dats[cumsum(dats$stock_landings_share) > (1-0.01*input$plim) , ]
+    dats1<- dats[c("fleet","stock_landings_share")]
+    names(dats1)[2] <- "prop"
+    # compute the position of each fleet on the X axis
+    dats1$pos <- 0.5 * (cumsum(dats1$prop) + cumsum(c(0, dats1$prop[-length(dats1$prop)])))
+    
+    # select the data of the original file for the main fleets only which is what will be plotted
+    dats2 <- data_tab[is.element(data_tab$fleet , dats1$fleet) & data_tab$year == input$year6,]
+    dats <- merge(dats1,dats2,all.y=T)
+    # put all no important stocks into a OTHer bin 
+    dats$oth<-0
+    dats$oth[dats$proportion_fleet_landings<0.05 & dats$stock != input$stock6]  <-1
+    dats$stock <- as.character(dats$stock)
+    dats$stock[dats$oth == 1] <- "OTH"
+    
+    
+    
+    g<-ggplot(dats , aes(x = pos , y = proportion_fleet_landings , width = prop , fill =  stock, col = (dats$stock==input$stock6)
+                         )) + 
+      geom_bar(stat="identity",position="fill" ) + 
+      facet_grid(~fleet, scales = "free_x", space = "free_x") + 
+      theme_minimal() +
+      theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank())        + 
+      scale_colour_manual("legend", values = c(NA,"black"), guide = F )   +
+      scale_x_continuous(name=paste("% of",input$stock6,"landings per fleet"),position = "top",breaks=dats$pos,labels = paste(round(100*dats$prop,0),"%"))  +
+      theme(strip.text.x = element_text( angle = 90) , text = element_text(size=12))  + ylab("Species composition of the landings\nper fleet") # +
+      #ggtitle(paste0("Main fleets contributing to ",input$plim,"% of \n",input$stock6, " landings \n\n")) + theme(plot.title = element_text(hjust = 0.5))
+    
+ g
+   
+  # p %>% layout(margin = list( l=120,b =75,t=105))
+  })
+  
+  output$QS.Landings.page<-renderUI({
+ list( paste("In the the ", input$Area_selector,"main fleets responsible for ",input$plim, "% of the ", 
+             input$stock6, "landings in", input$year6, sep="  " ),plotOutput("plotCompLandings",
+                                                                             width = '1200px', height = '800px'))}) 
+  
   
   ############## Mapping ##########################
   sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
@@ -3059,6 +3279,8 @@ server <- function(input, output, session) {
   })
   
   
+  
+  
   ###end of server###  
     }
 
@@ -3079,13 +3301,15 @@ ui <- fluidPage(tags$head(
     ".shiny-output-error:before { visibility: hidden; }"),
   theme = shinytheme("superhero"), #spacelab
   titlePanel("Mixed Fisheries"),
-  navlistPanel(id="mainpanel", widths=c(2,10), 
+  navlistPanel(id="mainpanel", widths=c(2,10),
                tabPanel(" Introduction",
                         value = "mp", icon = icon("home"),
                         fluidRow(column(width = 5, offset = 4, h2("Celtic Seas Ecoregion.",
                                                                   style = "font-family: 'Lobster', cursive;
                                                                   font-weight: 500; line-height: 1.1; "))), hr(),
-                        div(style = " border-radius: 25px;height:200px;background-color:#e5f5e0 ;color: black",
+                        fluidRow(column(width = 6, 
+                        div(style = " border-radius: 25px;height:310px;background-color:#e5f5e0 ;color: black;
+                            font-size:100%;",
                             tags$ul(
                               "The Celtic Seas ecoregion covers the northwestern shelf seas of the EU. 
                               It includes areas of the deeper eastern Atlantic Ocean and coastal seas that are
@@ -3105,31 +3329,55 @@ ui <- fluidPage(tags$head(
                               a strong linkage with the channel area, and in the south a strong link with the Bay of Biscay. 
                               The eastern part of the Rockall Bank is within the geographic scope of the ecoregion although 
                               it is separated from the western European shelf by the Rockall Trough."
-                              )), useShinyalert(), br(),
-                        fluidRow(
-                          column(width = 6, div(
-                            style = " border-radius: 25px;height:27px;background-color:#cc4c02;font-size:
-                            22px;color:lightblue;",
-                            tags$ul("Celtic Seas Ecoregion Map.")
-                          )),
-                          column(width = 3, div(
-                            style = " border-radius: 25px;height:27px;background-color:#cc4c02;font-size:
-                            22px;color:lightblue;",
-                            tags$ul("Explore.")
-                          ), hr())
-                        ),
-                        fluidRow(column(width = 6, h5("* showing major cities, ports, and ICES areas.")),
-                                 column(width = 3, div(
-                                   style = "display: inline-block;vertical-align:top; width: 225px;",
-                                   selectInput("FishGear", "", choices = c("Who is Fishing", "Gear Type")), class = "btn-link"
-                                 )), uiOutput("I_selections")),
-                        fluidRow(column(
+                              )),br(),
+                          div(
+                          style = " border-radius: 25px;height:27px;width:220px;background-color:#cc4c02;font-size:
+                          22px;color:lightblue;",
+                          tags$ul("Mixed fisheries.")
+                        ), br(),
+                        
+                        div(style = " border-radius: 25px;height:125px;background-color:#e5f5e0 ;color: black;
+                            font-size:100%;",
+                            tags$ul(
+                              "Fishing operations typically catch more than one species at a time, 
+                            although some fishing operations are more species selective than others.
+                            For example, pelagic trawling tends to catch only one species whereas demersal 
+                            trawling normally catches several species simultaneously. These operations are
+                            reported to ICES at a level that is aggregated for each EU Member State by
+                            key descriptors of fishing activity (hereafter called métier). The catch composition resulting from any fishing activity is
+                            described as a technical interaction. "
+                            ))),
+                        column(
                           width = 6,img(
-                            src = "images/Celtic_Seas_map.png", height = "400px",
+                            src = "images/CSEregion.png", height = "500px",
                             width = "600px", style = "padding-top: 7px; padding-bottom: 5px; 
                             padding-right: 20px;"
-                          )
-                          ), column(6, uiOutput("fishing")))
+                          ),br(),h5("* The Celtic Sea ecoregion highlited in yellow.")
+                          )), useShinyalert(), br(),
+                         fluidRow(
+                           column(width = 5, div(
+                            style = " border-radius: 25px;height:27px;background-color:#cc4c02;font-size:
+                            22px;color:lightblue;",
+                            tags$ul("Who is fishing and description of the fisheries.")
+                          ), hr()),
+                          column(width = 3,offset=3, div(
+                            style = " border-radius: 25px;height:27px;background-color:#cc4c02;font-size:
+                            22px;color:lightblue;",
+                            tags$ul("Metier Definitions.")
+                          ))
+                        ),
+                        fluidRow(
+                                 column(width = 3, div(
+                                   style = "display: inline-block;vertical-align:top; width: 225px;",
+                                   selectInput("FishGear", "", choices = c("Who is Fishing", "Description of the Fisheries")), class = "btn-link"
+                                 )),column(width = 6,offset=3, div(
+                                   style = "display: inline-block;vertical-align:top; width: 625px;",
+                                   selectInput("Area1", "", choices = c("Select Area",levels(MetierDes$Area))), class = "btn-link"
+                                 )))
+                        , uiOutput("I_selections"),
+                        fluidRow( column(6, uiOutput("fishing")),column(
+                          width = 6,uiOutput("Metierdesc")
+                          ))
                         ),
                
                tabPanel(" Hackathon Work", value = "hw", icon = icon("folder-open"),
@@ -3138,7 +3386,7 @@ ui <- fluidPage(tags$head(
                         absolutePanel(id="controls",top = 80, left = 700, width = 400, height = "auto", fixed=FALSE, draggable = TRUE,
                                       sliderInput("whitingslider", "Choose % reduction in Whiting Catch:", min = -100, max =0, value = 0, 
                                                   step = NULL, sep = "", animate = FALSE, post  = " %"))),
-               tabPanel("Landings: Celtic Sea",
+              navbarMenu("Data Explorer",tabPanel("Landings: Celtic Sea",
                         value = "mi", icon = icon("fish"),
                         tabsetPanel(
                           id = "Ltabselected", type = "pills",
@@ -3153,7 +3401,7 @@ ui <- fluidPage(tags$head(
                                    fluidRow(
                                      column(width = 3, div(
                                        style = "display: inline-block;vertical-align:top; width: 225px;",
-                                       selectInput("Country", "Select Country:", choices = levels(test$Country)), class = "btn-link"
+                                       selectInput("Country", "Select Country:", choices = c("All",levels(test$Country))), class = "btn-link"
                                      )),
                                      column(width = 3, div(
                                        style = "display: inline-block;vertical-align:top; width: 225px;",
@@ -3170,8 +3418,7 @@ ui <- fluidPage(tags$head(
                                      column(width = 4, uiOutput("pieUI")
                                             %>%
                                               withSpinner(color = "#0dc5c1"))
-                                   )
-                                     ),
+                                   )),
                           tabPanel("Page2",
                                    value = "page2",
                                    fluidRow(
@@ -3235,7 +3482,7 @@ ui <- fluidPage(tags$head(
                                        actionButton("info3", icon("info-circle"), style = "padding-top: 7px; padding-bottom: 5px; padding-right: 20px;", class = "btn-primary")
                                        ), hr(),
                                      fluidRow(
-                                       column(width = 3, div(style = "display: inline-block;vertical-align:top; width: 225px;", selectInput("CountryE", "Select Country:", choices = levels(test$Country)), class = "btn-link")),
+                                       column(width = 3, div(style = "display: inline-block;vertical-align:top; width: 225px;", selectInput("CountryE", "Select Country:", choices = c("All",levels(test$Country))), class = "btn-link")),
                                        column(width = 3, div(style = "display: inline-block;vertical-align:top; width: 225px;", selectInput("nameE", "Select Parameter:", choices = c("Metier by Vessel length" = 1, "Vessel length by Metier" = 2)), class = "btn-link")),
                                        uiOutput("E_selections")
                                      ),
@@ -3296,11 +3543,11 @@ ui <- fluidPage(tags$head(
                                      fluidRow(DT::dataTableOutput("tableE"))
                                      )
   )
-),
+)),
 
 tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
          selectInput("Area_selector","Select Area", choices=c("North_Sea", "Celtic_Sea"), selected = "North_Sea"),
-         selectInput(inputId = "Toolselected", label="Tool", choices=c("Effort App","Catchability App","Partial F App"),#,"Quota share App","Raw accessions App",
+         selectInput(inputId = "Toolselected", label="Tool", choices=c("Effort App","Catchability App","Partial F App","Quota share App"),#"Raw accessions App",
                      multiple=FALSE, selected = "Catchability App"),
          #conditionalPanel("input.Toolselected=='Raw accessions App'"),
          conditionalPanel(condition = "input.Toolselected == 'Effort App'",
@@ -3319,25 +3566,16 @@ tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
                                                )),
                                       tabPanel("Effort time series",
                                                fluidPage(
-                                                 titlePanel("Effort data"), #paste(Area,"Effort data")),
+                                                 titlePanel("Effort data"), 
                                                  fluidRow(
                                                    column(3,uiOutput("time.countryfilter")) 
                                                  ),
                                                  mainPanel(
-                                                   plotOutput("plotEffTS", width = '800px', height = '800px')
+                                                   plotlyOutput("plotEffTS", width = '1200px', height = '800px')
                                                    %>% withSpinner(color="#0dc5c1")
                                                  )
                                                ) #end of fluidPage
-                                      ),#end of tabPanel
-                                      tabPanel("Total effort by fleet",
-                                               fluidPage(
-                                                 titlePanel(paste("Effort by fleet relative to first data year")), #paste(Area,"Effort by fleet relative to first data year")),
-                                                 mainPanel(
-                                                   plotOutput("plotEff_Fl", width = '800px', height = '800px')
-                                                   %>% withSpinner(color="#0dc5c1")
-                                                 )
-                                               ) #end of FluidPage
-                                      ) #end of tabPanel
+                                      )
                           ) #end of tabsetPanel
          ), #end of conditionalPanel
          conditionalPanel("input.Toolselected == 'Catchability App'", 
@@ -3354,7 +3592,7 @@ tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
                                                    %>% withSpinner(color="#0dc5c1")
                                                  )
                                                )),
-                                      tabPanel("Catchability Plots",
+                                      tabPanel("Catchability Time Series",
                                                fluidPage(
                                                  titlePanel("Catchability data"), #paste(Area,
                                                  fluidRow(
@@ -3362,11 +3600,24 @@ tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
                                                    column(3,uiOutput("plot.stockfilter"))
                                                  ),
                                                  mainPanel(
-                                                   plotOutput("plotCatchability", width = '800px', height = '800px')
+                                                   plotOutput("plotCatchability", width = '1200px', height = '2000px')
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                               )
+                                      ),
+                                      tabPanel("Catchability Plot",
+                                               fluidPage(
+                                                 titlePanel("Catchability data"), #paste(Area,
+                                                 fluidRow(
+                                                   column(3,uiOutput("plot2.fleetfilter"))
+                                                 ),
+                                                 mainPanel(
+                                                   plotlyOutput("plot2Catchability", width = '1200px', height = '2000px')
                                                    %>% withSpinner(color="#0dc5c1")
                                                  )
                                                )
                                       )
+                                      
                           )
          ),
          conditionalPanel("input.Toolselected == 'Partial F App'",
@@ -3393,7 +3644,7 @@ tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
                                                    )
                                                  ),
                                                  mainPanel(
-                                                   plotOutput("plotPartialF", width = '800px', height = '800px')
+                                                   plotOutput("plotPartialF", width = '1200px', height = '800px')
                                                    %>% withSpinner(color="#0dc5c1")
                                                  )
                                                ) #end of FluidPage
@@ -3415,8 +3666,71 @@ tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
                                       )#end of tabPanel
                           )#end of tabsetPanel
          ), #end of Partial F conditionalPanel
-         conditionalPanel("input.Toolselected == 'Quota share App'")
-),
+         conditionalPanel("input.Toolselected == 'Quota share App'",
+                          tabsetPanel(id="Quota share Panel", type="tabs",
+                                      tabPanel("Fleet Landings share Tables",
+                                               fluidPage(
+                                                 titlePanel("Landings share data"),
+                                                 fluidRow(
+                                                   column(3,uiOutput("QS.year.table")),
+                                                   column(3,uiOutput("QS.stock.table"))),
+                                                # Create a new row for the table.
+                                                 fluidRow(
+                                                   DT::dataTableOutput("QStable")%>%
+                                                     withSpinner(color="#0dc5c1")
+                                                 )
+                                               )),
+                                      
+                                      tabPanel("Landings share time series",
+                                               fluidPage(
+                                                 titlePanel("Landings share data"),
+                                                fluidRow(
+                                               column(3,uiOutput("QS.fleet.plot1")
+                                               ),
+                                               column(3,uiOutput("QS.stock.plot1")
+                                               )
+                                      ),
+                                      mainPanel(
+                                        plotlyOutput("plotQS", width = '1200px', height = '800px')
+                                        %>% withSpinner(color="#0dc5c1")
+                                      )
+                                               
+                                               ))
+                                      ,#end of tabPanel
+                                      
+                                      tabPanel("Landings composition time series",
+                                               fluidPage(
+                                                 titlePanel("Landings composition data"),
+                                                 fluidRow(
+                                                   column(3,uiOutput("QS.fleet.plot2")
+                                                   )
+                                                 ),
+                                                 mainPanel(
+                                                   plotlyOutput("plotQScomp", width = '1200px', height = '800px')
+                                                  # plotlyOutput("plotQS", width = '800px', height = '800px')
+                                                   %>% withSpinner(color="#0dc5c1")
+                                                 )
+                                                 
+                                               )),#end of tabPanel
+                                      tabPanel("Main fleets catching each stock",
+                                               fluidPage(
+                                                 titlePanel("Main contributing fleets per stock and their landing species composition"),
+                                                 
+                                                 fluidRow(
+                                                   column(3,uiOutput("QS.stock.plot3")
+                                                   ),
+                                                   column(3,uiOutput("QS.year.plot3")
+                                                   ),
+                                                   column(3,uiOutput("QS.landings.plot3")
+                                                 )),
+                                                 
+                                                 mainPanel(
+                                                   uiOutput("QS.Landings.page")
+                                                 )
+                                               ) #end of FluidPage
+                                      )#end of tabPanel
+                          )
+)),
 tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
          fluidRow(column(width=5, selectInput("Species_selector","Select Species", choices=c(sp)),
                          plotOutput('Stockareas')),
@@ -3432,7 +3746,7 @@ tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
          br(),
          br()
 ),
-tabPanel("Scenarios: Celtic Sea",
+tabPanel("Stock Advice: Celtic Sea",
          value = "sc", icon = icon("line-chart"),
          tabsetPanel(
            id = "Mtabselected", type = "pills",
