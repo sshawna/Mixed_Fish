@@ -92,7 +92,7 @@ server <- function(input, output, session) {
   ###########Introduction##########################
   observeEvent(input$FishGear, {
     output$I_selections <- renderUI({
-      if (input$FishGear == "Who is Fishing.") {
+      if (input$FishGear == "Who is Fishing") {
         fluidRow(column(width = 3, div(
           style = "display: inline-block;vertical-align:top; width: 175px;",
           selectInput("CountryInt", "", choices = c(
@@ -102,7 +102,7 @@ server <- function(input, output, session) {
           )), class = "btn-link"
         )))
       }
-      else if (input$FishGear == "Description of the Fisheries.") {
+      else if (input$FishGear == "Description of the Fisheries") {
         fluidRow(column(width = 3, div(
           style = "display: inline-block;vertical-align:top; width: 525px;",
           selectInput("GearInt", "", choices = c(
