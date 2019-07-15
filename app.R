@@ -1699,15 +1699,14 @@ server <- function(input, output, session) {
       Cod_tac <- readOGR("www/Shapefiles","Cod_tac_T")
       Cod_7ek <- readOGR("www/Shapefiles","Cod_7ek_T")
       Add_tac <- readOGR("www/Shapefiles","Add_tac_T")
-      
-      leaflet() %>%
+    leaflet() %>%
         addProviderTiles(providers$Esri.OceanBasemap) %>% 
         addWMSTiles("http://gis.ices.dk/gis/services/ICES_reference_layers/ICES_Areas/MapServer/WMSServer?",
                     layers = "0",
                     options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
                     attribution = "ICES") %>%
-        setView(lng=-14,lat=52,zoom=5) %>% 
-        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948'),
+        setView(lng=-14,lat=52,zoom=4) %>% 
+        addLegend("bottomleft",col=c('#3d771e','#91d46d','#c773bd'),
                   labels = c("Cod TAC area",  "Additional TAC areas","Cod 7ek stock"))%>%
         addPolygons(data=Cod_tac, group="TAC", stroke = FALSE,fill=TRUE,
                     fillColor = '#3d771e', fillOpacity=0.5,
@@ -1718,15 +1717,11 @@ server <- function(input, output, session) {
                                 "<b>Division:</b> ",Cod_tac$Division, "<br />",
                                 "<b>Sub-Division:</b> ",Cod_tac$SubDivisio, "<br />")) %>%
         addPolygons(data=Add_tac, group="TAC", stroke = FALSE,fill=TRUE,
-                    fillColor = '#c773bd', fillOpacity=0.5,
-                    popup=paste("<b>Full</b> ",Add_tac$Area_Full, "<br />",
-                                "<b>Area_27:</b> ",Add_tac$Area_27, "<br />",
-                                "<b>Major_FA:</b> ",Add_tac$Major_FA, "<br />",
-                                "<b>Sub-Area:</b> ",Add_tac$SubArea, "<br />",
-                                "<b>Division:</b> ",Add_tac$Division, "<br />",
-                                "<b>Sub-Division:</b> ",Add_tac$SubDivisio, "<br />")) %>%
+                    fillColor = '#91d46d', fillOpacity=0.8,
+                    popup=paste("<b>ICES Code: </b>",Add_tac$ICESCODE, "<br />",
+                                "<b>ICES Area:</b> ",Add_tac$IcesArea, "<br />")) %>%
         addPolygons(data=Cod_7ek,  group="Stocks", stroke =TRUE, 
-                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
                     color = "white",dashArray = "3",
                     popup=paste("<b>Stock: </b>7ek", "<br />",
                                 "<b>Area: </b> ",Cod_7ek$Area_Full, "<br />",
@@ -1794,7 +1789,7 @@ server <- function(input, output, session) {
                     attribution = "ICES") %>%
         setView(lng=-14,lat=52,zoom=5) %>% 
         addLegend("bottomleft",col=c('#3d771e','#c773bd'),
-                  labels = c("Hake TAC area","Hake 7b-k stock"))%>%
+                  labels = c("Haddock TAC area","Haddock 7b-k stock"))%>%
         addPolygons(data=Had_tac, group="TAC", stroke = FALSE,fill=TRUE,
                     fillColor = '#3d771e', fillOpacity=0.4,
                     popup=paste("<b>Full name:</b> ",Had_tac$Area_Full, "<br />",
@@ -1806,11 +1801,9 @@ server <- function(input, output, session) {
         addPolygons(data=Had_7bk,  group="Stocks", stroke =TRUE, weight=1,
                     fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
                     color = "white",dashArray = "3",
-                    popup=paste("<b>Stock: </b>7bk", "<br />",
-                                "<b>Area: </b> ",Had_7bk$Area_Full, "<br />",
-                                "<b>Major_FA:</b> ",Had_7bk$Major_FA, "<br />",
-                                "<b>Sub-Area:</b> ",Had_7bk$SubArea, "<br />",
-                                "<b>Division:</b> ",Had_7bk$Division, "<br />"),
+                    popup=paste("<b>ICES Code: </b>",Had_7bk$ICESCODE, "<br />",
+                                "<b>ICES Name: </b> ",Had_7bk$ICESNAM, "<br />",
+                                "<b>ICES Area:</b> ",Had_7bk$IcesArea, "<br />"),
                     highlight = highlightOptions(weight = 5,
                                                  bringToFront = TRUE)) %>%
         addLayersControl(baseGroups = c("Esri.OceanBasemap"),
@@ -1818,7 +1811,6 @@ server <- function(input, output, session) {
                          options = layersControlOptions(collapsed = FALSE))
     }else if(input$Species_selector == "Whiting"){
       Whg_tac <- readOGR("www/Shapefiles","Whg_tac_T")
-      Whg_7bc <- readOGR("www/Shapefiles","Whg_7bc_T")
       Whg_7bcek <- readOGR("www/Shapefiles","Whg_7bcek_T")
       leaflet() %>%
         addProviderTiles(providers$Esri.OceanBasemap) %>% 
@@ -1828,7 +1820,7 @@ server <- function(input, output, session) {
                     attribution = "ICES") %>%
         setView(lng=-14,lat=52,zoom=5) %>% 
         addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948'),
-                  labels = c("Whiting TAC area","Whiting 7bc stock","Whiting 7bcek stock"))%>%
+                  labels = c("Whiting TAC area","Whiting 7bcek stock"))%>%
         addPolygons(data=Whg_tac, group="TAC", stroke = FALSE,fill=TRUE,
                     fillColor = '#3d771e', fillOpacity=0.4,
                     popup=paste("<b>Full name:</b> ",Whg_tac$Area_Full, "<br />",
@@ -1837,25 +1829,12 @@ server <- function(input, output, session) {
                                 "<b>Sub-Area:</b> ",Whg_tac$SubArea, "<br />",
                                 "<b>Division:</b> ",Whg_tac$Division, "<br />",
                                 "<b>Sub-Division:</b> ",Whg_tac$SubDivisio, "<br />")) %>%
-        addPolygons(data=Whg_7bc,  group="Stocks", stroke =TRUE, weight=1,
-                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
-                    color = "white",dashArray = "3",
-                    popup=paste("<b>Stock: </b>7bc", "<br />",
-                                "<b>Area: </b> ",Whg_7bc$Area_Full, "<br />",
-                                "<b>Major_FA:</b> ",Whg_7bc$Major_FA, "<br />",
-                                "<b>Sub-Area:</b> ",Whg_7bc$SubArea, "<br />",
-                                "<b>Division:</b> ",Whg_7bc$Division, "<br />"),
-                    highlight = highlightOptions(weight = 5,
-                                                 bringToFront = TRUE)) %>%
         addPolygons(data=Whg_7bcek,  group="Stocks", stroke =TRUE, weight=1,
-                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.8,
                     color = "white",dashArray = "3",
-                    popup=paste("<b>Stock: </b>7bcek", "<br />",
-                                "<b>Area: </b> ",Whg_7bcek$Area_Full, "<br />",
-                                "<b>Area: </b> ",Whg_7bcek$Area_Full, "<br />",
-                                "<b>Major_FA:</b> ",Whg_7bcek$Major_FA, "<br />",
-                                "<b>Sub-Area:</b> ",Whg_7bcek$SubArea, "<br />",
-                                "<b>Division:</b> ",Whg_7bcek$Division, "<br />"),
+                    popup=paste("<b>ICES Code: </b>",Whg_7bcek$ICESCODE, "<br />",
+                                "<b>ICES Name: </b> ",Whg_7bcek$ICESNAM, "<br />",
+                                "<b>ICES Area:</b> ",Whg_7bcek$IcesArea, "<br />"),
                     highlight = highlightOptions(weight = 5,
                                                  bringToFront = TRUE)) %>%
         addLayersControl(baseGroups = c("Esri.OceanBasemap"),
@@ -1873,18 +1852,17 @@ server <- function(input, output, session) {
                     options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
                     attribution = "ICES") %>%
         setView(lng=-14,lat=52,zoom=5) %>% 
-        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948','#E2BEBA'),
+        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948','#CB8B84'),
                   labels = c("Hake TAC area","Hake 3a46 stock", "Hake 7 stock","Hake 8abd stock"))%>%
         addPolygons(data=Hke_tac, group="TAC", stroke = FALSE,fill=TRUE,
                     fillColor = '#3d771e', fillOpacity=0.4,
-                    popup=paste("<b>Full name:</b> ",Hke_tac$Area_Full, "<br />",
-                                "<b>Area_27:</b> ",Hke_tac$Area_27, "<br />",
-                                "<b>Major_FA:</b> ",Hke_tac$Major_FA, "<br />",
-                                "<b>Sub-Area:</b> ",Hke_tac$SubArea, "<br />",
-                                "<b>Division:</b> ",Hke_tac$Division, "<br />",
-                                "<b>Sub-Division:</b> ",Hke_tac$SubDivisio, "<br />")) %>%
+                    popup=paste("<b>ICES Code: </b>",Hke_tac$ICESCODE, "<br />",
+                                "<b>ICES Name: </b> ",Hke_tac$ICESNAM, "<br />",
+                                "<b>ICES Area:</b> ",Hke_tac$IcesArea, "<br />"),
+                    highlight = highlightOptions(weight = 5,
+                                                 bringToFront = TRUE)) %>%
         addPolygons(data=Hke_3a46,  group="Stocks", stroke =TRUE, weight=1,
-                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.7,
+                    fill=TRUE, fillColor = '#c773bd', fillOpacity=0.5,
                     color = "white",dashArray = "3",
                     popup=paste("<b>Stock: </b>3a46", "<br />",
                                 "<b>Area: </b> ",Hke_3a46$Area_Full, "<br />",
@@ -1894,7 +1872,7 @@ server <- function(input, output, session) {
                     highlight = highlightOptions(weight = 5,
                                                  bringToFront = TRUE)) %>%
         addPolygons(data=Hke_7,  group="Stocks", stroke =TRUE, weight=1,
-                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.5,
                     color = "white",dashArray = "3",
                     popup=paste("<b>Stock: </b>7", "<br />",
                                 "<b>Area: </b> ",Hke_7$Area_Full, "<br />",
@@ -1905,7 +1883,7 @@ server <- function(input, output, session) {
                     highlight = highlightOptions(weight = 5,
                                                  bringToFront = TRUE)) %>%
         addPolygons(data=Hke_8abd,  group="Stocks", stroke =TRUE, weight=1,
-                    fill=TRUE, fillColor = '#590948', fillOpacity=0.7,
+                    fill=TRUE, fillColor = '#CB8B84', fillOpacity=0.3,
                     color = "white",dashArray = "3",
                     popup=paste("<b>Stock: </b>8abd", "<br />",
                                 "<b>Area: </b> ",Hke_8abd$Area_Full, "<br />",
