@@ -2172,7 +2172,7 @@ server <- function(input, output, session) {
                     options = WMSTileOptions(format = "image/png", transparent = TRUE, crs = "EPSG:4326"),
                     attribution = "ICES") %>%
         setView(lng=-14,lat=52,zoom=5) %>% 
-        addLegend("bottomleft",col=c('#3d771e','#c773bd','#590948'),
+        addLegend("bottomleft",col=c('#3d771e','#590948'),#'#c773bd'
                   labels = c("Whiting TAC area","Whiting 7bcek stock"))%>%
         addPolygons(data=Whg_tac, group="TAC", stroke = FALSE,fill=TRUE,
                     fillColor = '#3d771e', fillOpacity=0.4,
@@ -2183,7 +2183,7 @@ server <- function(input, output, session) {
                                 "<b>Division:</b> ",Whg_tac$Division, "<br />",
                                 "<b>Sub-Division:</b> ",Whg_tac$SubDivisio, "<br />")) %>%
         addPolygons(data=Whg_7bcek,  group="Stocks", stroke =TRUE, weight=1,
-                    fill=TRUE, fillColor = '#590948', fillOpacity=0.8,
+                    fill=TRUE, fillColor = '#590948', fillOpacity=0.9,
                     color = "white",dashArray = "3",
                     popup=paste("<b>ICES Code: </b>",Whg_7bcek$ICESCODE, "<br />",
                                 "<b>ICES Name: </b> ",Whg_7bcek$ICESNAM, "<br />",
