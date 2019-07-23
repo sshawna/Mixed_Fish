@@ -1,4 +1,3 @@
-
 library(shiny)
 library(shinythemes)
 library(shinyalert)
@@ -20,6 +19,8 @@ library(googlesheets)
 library(reshape2)
 library(psych)
 library(grid)
+library(leaflet)
+library(rgdal)
 #library(vmstools)
 options(scipen=999)
 
@@ -4032,12 +4033,10 @@ tabPanel(" Existing Tools", value = "et", icon = icon("wrench"),
                           )
 )),
 tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
-         fluidRow(column(width=5, selectInput("Species_selector","Select Species", choices=c(sp)),
-                         plotOutput('Stockareas')),
-                  column(width=5,offset=1,
-                         selectizeInput(inputId = "Stockselector", label="Select Stock",
-                                        choices=NULL, multiple=FALSE),
-                         plotOutput('Stockoverlap'))
+         fluidRow(column(width=11,offset=1,
+                         selectInput("Species_selector","Select Species", choices=c(species)),
+                         leafletOutput("map",  height='880')%>%
+                           withSpinner(color = "#0dc5c1"))
          ),
          br(),
          br(),
