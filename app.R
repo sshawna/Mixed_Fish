@@ -20,9 +20,15 @@ library(googlesheets)
 library(reshape2)
 library(psych)
 library(grid)
+library(devtools)
+library(Rcpp)
+#install_github('ramnathv/rCharts', force= TRUE)
+library(rCharts)
+library(rjson)
+
 #library(vmstools)
 options(scipen=999)
-
+YEAR<-2018
 # DT table option
 opt<-list( 
   dom = "Blfrtip"
@@ -82,10 +88,15 @@ FCubepage3 <- read.csv("data/FCube/FCubePage.csv")
 FCubepage3Radar <- dcast(FCubepage3, sc + year + value ~ stock, value.var = "RelativeToSS")
 sp <- c("Cod","Haddock","Whiting","Plaice", "Sole", "Hake", "Megrim", "Anglerfish", "Nephrops")
 species <- c("Cod","Haddock","Whiting", "Sole", "Hake", "Megrim", "Anglerfish/Monkfish")
-
-
-
-
+DataMethods<-read.csv("data/DataMethods.csv")
+Ldist<-readRDS("data/existing_tools/6.quota_share_app/data/Celtic_Sea/CSquotashare1.rds")
+ManagementArea<-read.csv("data/ManagementArea.csv")
+ReferencePoints<-read.csv("data/BRef.csv")
+MandData<-read.csv("data/MandData.csv")
+MandDataPie<-aggregate(MandData$value,by=list(MandData$Year,MandData$Stock),FUN=sum)
+links<-read.csv("data/Links.csv")
+names(MandDataPie)<-c("Year","Stock","value")
+col<-brewer.pal(n=3,"Accent")
 ########################################## Server ##################################################
 
 server <- function(input, output, session) {
@@ -3578,8 +3589,240 @@ server <- function(input, output, session) {
     }
   })
   
+  ########################################################################################################################
+  ################################Stock Advice######################################################
   
+  output$ICES.Summary<- renderText({
+    t<-as.numeric(input$ICESAyear)
+    a<-"
+    Mixed-fisheries scenarios are based on the central assumption that the 
+    fishing patterns and catchability of a fleet in"
+    b<-paste("The term “fleet’s stock share” or “stock share”
+    is used to describe the share of the fishing opportunities for 
+    each particular fleet, calculated based on the single-stock advice for",t+1,
+    "and the historical proportion of the stock landings taken by the fleet.")
+    
+    if(input$ICESAyear!=2018){
+paste(h5(a, t,"and",t+1,"are the same as those in",t-1, "(similar to procedures in single-stock forecasts,
+     where growth and selectivity are assumed constant). ", b))}
+      else{paste(h5(a,t,"and",t+1,"are the same as the average of", t-3,"–",t-1,".", b))}})
   
+  output$ICES.SC <- function() {
+    
+    t<-as.numeric(input$ICESAyear)
+    text_tbl <- data.frame(
+      Scenarios = c(
+        "Maximum", "Minimum", "Haddock MSY approach", "Whiting MSY approach", "Status quo effort","Cod MSY approach"
+      ),
+      Abbreviation = c("max", "min", "had-cs ", "wht-cs", "sq_E","cod-cs"),
+      Explanation = c(
+        " For each fleet, fishing stops when all stocks have been caught up to the fleet’s stock shares.
+        This option causes overfishing of the single-stock advice possibilities of most stocks.",
+        "For each fleet, fishing stops when the catch for any one of the stocks meets the fleet’s stock share. This option is the most precautionary option, 
+        causing underutilization of the single-stock advice possibilities of other stocks.",
+        "All fleets set their effort corresponding to that required to catch their haddock stock share, regardless of other catches. ",
+        "All fleets set their effort corresponding to that required to catch their whiting stock share, regardless of other catches.",
+        paste("The effort of each fleet is set equal to the effort in the most recently recorded year",t-1),
+        "All fleets set their effort corresponding to that required to catch their whiting stock share, regardless of other catches."
+      )
+    )
+    if(input$ICESAyear==2015|input$ICESAyear==2016){
+    
+    
+    text_tbl %>%
+      knitr::kable("html") %>%
+      kable_styling(full_width = F, font_size = 13) %>%
+      column_spec(c(1:3), background = "black", include_thead = TRUE, border_right = T) %>%
+      column_spec(1, bold = T, border_right = T, underline = T) %>%
+      column_spec(2, width = "3em", bold = T, border_right = T, underline = T) %>%
+      column_spec(3, width = "60em", bold = T) %>%
+      row_spec(c(1, 3, 5), background = "lightgrey") %>%
+      row_spec(c(2, 4,6), background = "lightyellow", color = "#525252")
+    }
+    else if(input$ICESAyear==2017){
+      add<-data.frame(Scenarios="Value",Abbreviation="val",Explanation ="A simple scenario accounting for the economic importance of each stock for
+                       each fleet. The effort by fleet is equal to the average of the efforts required to catch the fleet’s stock shares
+                      of each of the stocks, weighted by the historical catch value of that stock. This option causes overfishing of some stocks
+                      and underutilization of others.")
+      text_tbl<-rbind(text_tbl,add)
+      
+      text_tbl %>%
+        knitr::kable("html") %>%
+        kable_styling(full_width = F, font_size = 13) %>%
+        column_spec(c(1:3), background = "black", include_thead = TRUE, border_right = T) %>%
+        column_spec(1, bold = T, border_right = T, underline = T) %>%
+        column_spec(2, width = "3em", bold = T, border_right = T, underline = T) %>%
+        column_spec(3, width = "60em", bold = T) %>%
+        row_spec(c(1, 3, 5,7), background = "lightgrey") %>%
+        row_spec(c(2, 4,6), background = "lightyellow", color = "#525252")
+      
+    }
+    else if(input$ICESAyear==2018){
+      add<-data.frame(Scenarios=c("Value","Cod FMSY"),Abbreviation=c("val","Cod_fmsy"),Explanation =c("A simple scenario accounting for the economic importance of each stock for
+                      each fleet. The effort by fleet is equal to the average of the efforts required to catch the fleet’s stock shares
+                      of each of the stocks, weighted by the historical catch value of that stock. This option causes overfishing of some stocks
+                      and underutilization of others.","All fleets set their effort corresponding to that required to catch their cod stock share, 
+                        where the cod TAC is set according to reduced FMSY (F = 0.12, FMSY × (SSB(2019) / MSY Btrigger)),
+                        regardless of other catches."))
+      text_tbl<-text_tbl[-6,]
+      text_tbl<-rbind(text_tbl,add)
+      
+      text_tbl %>%
+        knitr::kable("html") %>%
+        kable_styling(full_width = F, font_size = 13) %>%
+        column_spec(c(1:3), background = "black", include_thead = TRUE, border_right = T) %>%
+        column_spec(1, bold = T, border_right = T, underline = T) %>%
+        column_spec(2, width = "3em", bold = T, border_right = T, underline = T) %>%
+        column_spec(3, width = "60em", bold = T) %>%
+        row_spec(c(1, 3, 5,7), background = "lightgrey") %>%
+        row_spec(c(2, 4,6), background = "lightyellow", color = "#525252")
+      
+    }}
+    
+   output$MethodData <- renderText({ 
+     DataMethods=filter(DataMethods, Year==input$ICESAyear)
+     paste(DataMethods[1,2])
+      
+    })
+   
+   output$MethodData2 <- renderText({ 
+     DataMethods=filter(DataMethods, Year==input$ICESAyear)
+     paste(DataMethods[1,3])
+     
+   })
+   
+   output$ManagementArea<-function() {
+     text_tbl<-ManagementArea
+     text_tbl %>%
+     knitr::kable("html") %>%
+     kable_styling(full_width = F, font_size = 13)%>%
+     column_spec(c(1:3), background = "black", include_thead = TRUE, border_right = T) %>%
+       column_spec(1, bold = T, border_right = T, underline = T) %>%
+       column_spec(2, width = "3em", bold = T, border_right = T, underline = T) %>%
+       column_spec(3, width = "60em", bold = T) %>%
+       row_spec(c(1, 3), background = "lightgrey") %>%
+       row_spec(c(2), background = "lightyellow", color = "#525252")}
+   
+  ref <- reactive({
+     filter(ReferencePoints, Year==input$ICESAyear)
+   })
+  
+   output$table.ref<-function() {
+     text_tbl<-ref()
+     if(text_tbl$Year!=2018){
+     text_tbl<- text_tbl[-1]
+     text_tbl %>%
+       knitr::kable("html")%>%
+       kable_styling(full_width = F, font_size = 13)%>%
+       column_spec(c(1:4), background = "black", include_thead = TRUE, border_right = T) %>%
+       column_spec(1, bold = T, border_right = T, underline = T) %>%
+       column_spec(2, bold = T, border_right = T) %>%
+       column_spec(3, bold = T) %>%
+       column_spec(4, bold = T) %>%
+       row_spec(c(1, 3,5,7), background = "lightgrey") %>%
+       row_spec(c(2,4,6,8), background = "lightyellow", color = "#525252")}
+     else{ text_tbl<- text_tbl[-1]
+     text_tbl %>%
+       knitr::kable("html")%>%
+       kable_styling(full_width = F, font_size = 13)%>%
+       column_spec(c(1:4), background = "black", include_thead = TRUE, border_right = T) %>%
+       column_spec(1, bold = T, border_right = T, underline = T) %>%
+       column_spec(2, bold = T, border_right = T, underline = T) %>%
+       column_spec(3, bold = T) %>%
+       column_spec(4, bold = T) %>%
+       row_spec(c(1, 3,5,7,9,11), background = "lightgrey") %>%
+       row_spec(c(2,4,6,8,10,12), background = "lightyellow", color = "#525252")}
+     
+   }
+   
+   output$pieChart <- renderChart({
+     year=as.numeric(input$ICESAyear)-1
+     t<- subset(MandDataPie, Year == year)
+     t$PERCENT = round((t$value/sum(t$value)) * 100,2)
+     p1 <- nPlot(x = "Stock", y = "value", data = t, type = "pieChart")
+     p1$chart(tooltipContent = "#! function(key, y, e, graph){return '<h3>'
+              + key + '</h3>' + '<p>'+ 'Landings: ' + y + ' tones' + '<br>' + ' % of Landings: ' + e.point.PERCENT} !#" )
+     p1$set(width = 300, height = 500)
+     p1$chart(color = rev(col),showLegend = FALSE)
+     p1$addParams(height = 300, dom = 'pieChart ')
+     return(p1)
+})
+   
+   output$LandingBars <-renderText({
+     t<-as.numeric(input$ICESAyear)
+     paste("Landings distribution in ", t-1, "of species by métier used by mixed-fisheries model. ")
+     
+     })
+   output$BarChart <- renderChart({
+     year=as.numeric(input$ICESAyear)-1
+     d<- subset(MandData, Year == year) 
+     d$value<-d$value/1000
+     d1 <- dPlot(
+       x ="Metier",
+       y = "value",
+       groups = "Stock",
+       data = d,
+       type = "bar"
+     )
+     d1$xAxis(orderRule = "Metier")
+     d1$legend(
+       x = 60,
+       y = 10,
+       width = 700,
+       height = 20,
+       horizontalAlign = "right"
+     )
+     d1$defaultColors(col)
+     d1$addParams(height = 400, dom = 'BarChart ')
+     
+     if(input$barChoice==1){
+       d1$yAxis (
+         type= "addMeasureAxis"
+         , outputFormat = "0.5f")}
+     else if(input$barChoice==2){d1$yAxis (
+       type= "addPctAxis"
+     )}
+     else if(input$barChoice==3){
+       d1 <- dPlot(
+         x =c("Metier","Stock"),
+         y = "value",
+         groups = "Stock",
+         data = d,
+         type = "bar"
+       )
+       d1$xAxis(orderRule = "Metier")
+       
+       d1$legend(
+         x = 60,
+         y = 10,
+         width = 700,
+         height = 20,
+         horizontalAlign = "right"
+       )
+       d1$defaultColors(col)
+       d1$yAxis (
+         type= "addMeasureAxis"
+         , outputFormat = "0.5f")
+       d1$addParams(height = 400, dom = 'BarChart ')
+       
+     }
+     
+     return(d1)
+   })
+   
+   output$NoteBars <-renderText({
+     t<-as.numeric(input$ICESAyear)
+     paste("Note: The “other” (OTH) displayed here is a mixed category consisting of 
+           (i) landings without corresponding effort and (ii) 
+           landings of any combination of fleet and métier with landings < 1% of
+           any of the considered stocks in  ", t-1,"." )
+     
+   })
+   output$ICESlinkpdf <- renderUI({
+     t<-filter(links,Year==input$ICESAyear)
+    url <- a("ICES Mixed-fisheries advice", href=paste(t[1,2]),target="_blank")
+     tagList(url)
+   })
   
   ###end of server###  
     }
@@ -3599,7 +3842,7 @@ ui <- fluidPage(tags$head(
     type = "text/css",
     ".shiny-output-error { visibility: hidden; }",
     ".shiny-output-error:before { visibility: hidden; }"),
-  theme = shinytheme("superhero"), #spacelab
+  theme = shinytheme("spacelab"), #spacelab superhero
   titlePanel("Mixed Fisheries"),
   navlistPanel(id="mainpanel", widths=c(2,10),
                tabPanel(" Introduction",
@@ -4046,7 +4289,7 @@ tabPanel(" Mapping", value ="sc", icon = icon("map-marked"),
          br(),
          br()
 ),
-tabPanel("Stock Advice: Celtic Sea",
+tabPanel("FCube: Celtic Sea",
          value = "sc", icon = icon("line-chart"),
          tabsetPanel(
            id = "Mtabselected", type = "pills",
@@ -4230,7 +4473,49 @@ tabPanel("Stock Advice: Celtic Sea",
                       )
                       )
       )
-    )
+    ),
+tabPanel("Stock Advice: Celtic Sea",
+         value = "sc", icon = icon("line-chart"),
+         fluidRow(column(
+           width = 7, offset = 2,
+           h2("Mixed-fisheries advice for Divisions 7.b-c, e–k (Celtic Sea).", style = "font-family: 'Lobster', cursive;
+              font-weight: 500; line-height: 1.1; ")
+           )), hr(), div(
+           style = "border-radius: 25px,width:120px;color:orange",
+           selectInput("ICESAyear",
+                       label = "Select Advice Year", choices = c(2015:YEAR),
+                       selectize = T,selected = YEAR
+           )
+         ),
+         tabsetPanel(id = "Atabselected", type = "tabs",
+           tabPanel("ICES Advice",br(),"Mixed-fisheries considerations combine single-species stock assessments with 
+                    information on the average catch composition and fishing effort of the fleets in the Celtic Sea.
+                    In the absence of specific mixed-fisheries management objectives, ICES does not advise on unique
+                    mixed-fisheries catch opportunities for the individual stocks. "
+                   ,br(),hr(),
+                    tabsetPanel(type="pills",
+                                tabPanel( "Methods and Data",
+                                          htmlOutput("MethodData"),br(), h4("Advice and management area for the three gadoids species considered.",
+                                                                                   style = "font-weight:bold;text-decoration: underline;color:lightblue;text-align:center"
+                                          ),tableOutput("ManagementArea"),br(),
+                                          fluidRow(column(width=6,h4("Landings distribution.",
+                                                                     style = "font-weight:bold;color:lightblue;text-align:center;text-decoration: underline;"
+                                          ),fluidRow(column(width=6,htmlOutput("MethodData2")),column(width=6,showOutput("pieChart", "nvd3")))),column(width=6,h4("Reference points .",
+                                                               style = "font-weight:bold;text-decoration: underline;color:lightblue;text-align:center"
+                                          ),tableOutput("table.ref"))),div( style = "font-size: 18px;font-weight:bold;color:lightblue;text-align:center;text-decoration: underline;"
+                                                                            ,textOutput("LandingBars")),br(),
+                                          fluidRow(column(4,radioButtons("barChoice", label = h3(""),
+                                          choices = list("Landings in '000 tonnes (stacked)" = 1,
+                                                         "Landings in '000 tonnes (grouped)" = 3,
+                                                         "% of Landings " = 2),  selected = 1)),column(8,showOutput("BarChart", "dimple"),br(),textOutput("NoteBars")))),
+                                tabPanel( "Scenarios", htmlOutput("ICES.Summary"), 
+                                          h4("Mixed-fisheries scenarios considered for the Celtic Sea gadoids.",
+                                          style = "font-weight:bold;color:lightblue;text-decoration: underline;text-align:center"
+                                ),tableOutput("ICES.SC"))))
+            ,
+           tabPanel("Forecast",h3("Select Scenario options."))
+           ) ,hr(), h5("Link to the ICES Mixed-fisheries advice pdf:"), 
+         uiOutput("ICESlinkpdf"))
 ),
 
 hr(),
