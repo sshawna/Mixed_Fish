@@ -1,0 +1,30 @@
+Year,Scenario,Summary
+2015,max," The least limiting stock is whiting for fishing activities that represent 92% of the effort (kW-days) in 2015,  6% limited by cod with the remaining 2% limited by haddock. Cod beeing fished above the precautionary level (Fpa) and above Fmsy in 2017. SSB in 2017 above the precautionary level (Bpa) for any of the stocks . Whiting is fished  above Fmsy in 2016. Scenario suggests that if all fleets’ stock shares are to be fully utilized, catches of cod and haddock would be considerably higher than advised in the single-stock advice"
+2015,min,SSB in 2017 above the precautionary level (Bpa) for any of the stocks .
+2015,had,SSB in 2017 above the precautionary level (Bpa) for any of the stocks . Cod being fished above Fmsy.
+2015,wht,SSB in 2017 above the precautionary level (Bpa) for any of the stocks . Cod being fished above Fmsy.
+2015,stq,Cod beeing fished above the precautionary level (Fpa) and Fmsy in 2016. SSB in 2017 above the precautionary level (Bpa) for any of the stocks .
+2015,cod,SSB in 2017 above the precautionary level (Bpa) for any of the stocks .
+2016,max," The least limiting stock is whiting for fishing activities that represent 75% of the effort (kW-days) in 2015, with the remaining 25% limited by haddock. Cod beeing fished above the precautionary level (Fpa) and above Fmsy in 2017 . SSB for cod in 2018 falling below the precautionary level (Bpa) and Blim. Scenario suggests that if all fleets’ stock shares are to be fully utilized, catches of cod and haddock would be considerably higher than advised in the single-stock advice. "
+2016,min,"The most limiting stock is cod for fishing activities that represent 95% of the fishing effort (kW-days) in 2015, with the remaining 5% limited by haddock. SSB for cod in 2018 falling below the precautionary level (Bpa). Whiting is fished at or below Fmsy in 2017."
+2016,had,SSB for cod in 2018 falling below the precautionary level (Bpa) and Blim. Cod being fished above Fmsy. Whiting is fished at or below Fmsy in 2017.
+2016,wht,Cod beeing fished above the precautionary level (Fpa) and above Fmsy in 2017 . SSB for cod in 2018 falling below the precautionary level (Bpa) and Blim. Whiting is fished at or below Fmsy in 2017.
+2016,stq,SSB for cod in 2018 falling below the precautionary level (Bpa) and Blim . Cod being fished above Fmsy. Whiting is fished at or below Fmsy in 2017.
+2016,cod,SSB for cod in 2018 falling below the precautionary level (Bpa). Whiting is fished at or below Fmsy in 2017.
+2017,max,"Scenario demonstrates the upper bound of potential fleet effort and stock catches. It assumes all fleets continue fishing until all their stock shares are exhausted, irrespective of the economic viability of such actions. Whiting is the least limiting quota for most fleets. Cod being fished above Fmsy."
+2017,min," Haddock is the most limiting stock for most fleets (representing 64% of effort in 2016), while cod is the limiting stock for the remaining fleets (24% of fleet effort). Whiting is fished at or below FMSY in 2018 ."
+2017,had,Cod being fished above Fmsy. Whiting is fished at or below FMSY in 2018 .
+2017,wht,Whiting is the least limiting quota most fleets . Cod being fished above Fmsy. Whiting is fished at or below FMSY in 2018 .
+2017,stq,Cod being fished above Fmsy. Whiting is fished at or below FMSY in 2018 .
+2017,cod,Whiting is fished at or below FMSY in 2018 .
+2017,value,Cod being fished above Fmsy. Whiting is fished at or below FMSY in 2018 .
+2017,range,It utilises the MSY ranges to minimise the mixed fisheries imbalances in the fishery. That option results in an F for haddock close to the upper limit of the FMSY range. The F for cod slightly below FMSY and the F for whiting well below FMSY and close to the lower bound of the FMSY range. The resulting biomass projections in 2019 are above MSY Btrigger for all three stocks and are therefore can be considered safe harvesting practices in the short term.
+2018,max,"Scenario indicated that whiting is the least limiting quota for most fleets (9 of 11 fleets, representing 68% of the effort in 2017), while haddock is the least limiting quota for the remaining two fleets. Whiting and haddock being fished above FMSY in 2019. Scenario suggests that if all fleets’ stock shares are to be fully utilized, catches of cod and haddock would be considerably higher than advised in the single-stock advice, with whiting being slightly above. This indicates that not all fleets are limited by the same stock. "
+2018,min,"Scenario confirms that this mismatch is due to the fact that all fleets operating within the Celtic Sea catch cod to some extent, resulting in cod being a ""choke"" species for haddock and whiting. Therefore, the scenario results in zero catch of all three gadoids. Scenario meets the objective of all stocks being fished at or below FMSY."
+2018,had,"Undershoots of whiting, as fishing is stopped when the haddock quota is reached."
+2018,wht,Haddock is  overfished.
+2018,stq,"Important to note that the ‘status quo effort’ scenario shows catches higher than the ‘maximum’ scenario. This indicates that the current fishing effort is higher than available fishing opportunities for all three gadoid stocks, indicating other stocks may also play a role in driving effort dynamics in the fisheries. Whiting and haddock being fished above FMSY in 2019. "
+2018,codM,"Same outcome as the ‘min’ scenario, thus it is not presented in the forecast."
+2018,value,Haddock is overfished and undershoot of whiting.
+2018,cod,"The low value of F (0.12) under the cod MSY approach (assuming a non-zero catch) results in substantial undershoots of both haddock and whiting, as fishing is stopped when the cod quota is reached. Scenario shows underutilizations of both the haddock and whiting single-stock TACs. "
+2018,range,"The outcomes of this scenario are driven by the restrictive nature of the cod advice this year, with the minimum of the FMSY range advice for haddock and whiting resulting from the need to reduce cod catches to a minimum. "
