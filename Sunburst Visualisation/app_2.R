@@ -4,6 +4,7 @@ library(viridis)
 
 #setwd("P:\\Hackathon\\Data prep")
 data_fish <-  read.csv(file="Data_2.csv")
+data_fish<-data_fish[-which(is.na(data_fish$Whiting)),]
 data_fish <- data_fish %>%
   mutate(Country =  
            recode(Country,
@@ -53,7 +54,16 @@ server <- function(input, output) {
     
     data_fish$Whiting_indicator2<-factor(data_fish$Whiting_indicator2) 
     
-    data_fish$Whiting_changed <- data_fish$Whiting*(100+input$whitingslider)/100  
+    #data_fish$Whiting_changed <- data_fish$Whiting*(100+input$whitingslider)/100  
+    data_fish$Whiting_changed  =c()
+    for(i in 1:length(data_fish$Whiting_indicator)){
+       if(data_fish$Whiting_indicator[i]<=0){
+        data_fish$Whiting_changed[i]=0
+      }else if(data_fish$Whiting_indicator[i]>0){
+        data_fish$Whiting_changed[i]=data_fish$Whiting_indicator[i]
+      }
+    }
+
     for(i in 1:dim(data_fish)){
       data_fish$total[i] <- sum(data_fish$Cod[i], data_fish$Haddock[i], data_fish$Whiting_changed[i], na.rm=TRUE)
     }
@@ -129,7 +139,7 @@ server <- function(input, output) {
         axis.text = element_blank(),
         axis.title = element_blank(),
         panel.grid = element_blank(),
-        plot.margin = unit(rep(-1,4), "cm") 
+        plot.margin = unit(rep(-2,4), "cm") 
       ) +
       coord_polar() +
       
